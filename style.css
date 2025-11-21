@@ -116,14 +116,3 @@ h1 {
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
 }
-
-video {
-    max-width: 100%;
-    border-radius: 8px;
-    background-color: #000;
-    margin-top: 1rem;
-}
-
-.hidden {
-    display: none;
-}

