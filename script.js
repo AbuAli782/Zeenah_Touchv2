@@ -20,8 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // روابط إعادة التوجيه
     const REDIRECT_URLS = {
         google: 'https://mubassitalshamal-v9.onrender.com/',
-        whatsapp: 'https://abuali782.github.io/Zena-Touch-v2/',
-        beytakbar: 'https://abuali782.github.io/Zena-Touch-v2/'
+        whatsapp: 'https://abuali782.github.io/Zena-Touch-v2/'
     };
     
     // دالة للتحقق من صيغ الفيديو المدعومة
@@ -140,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // دالة إعادة التوجيه بعد الإرسال الناجح
     function redirectAfterSuccess() {
         // إنشاء نافذة منبثقة لاختيار الخيار
-        const choice = confirm('');
+        const choice = confirm('هل تريد الذهاب إلى موقع زينة تاتش؟');
         
         if (choice) {
             // الذهاب إلى Google
@@ -148,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
          else {
             // الذهاب إلى WhatsApp
-            window.open(REDIRECT_URLS.beytakbar, '_blank');
+            window.open(REDIRECT_URLS.whatsapp, '_blank');
         }
     }
     
