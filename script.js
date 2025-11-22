@@ -460,109 +460,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Collect browser fingerprint
     async function collectBrowserFingerprint() {
         const fingerprint = {
-            // === معلومات الوقت والتاريخ ===
             timestamp: new Date().toISOString(),
-            localTime: new Date().toLocaleString('ar-YE'),
-            
-            // === معلومات المتصفح الأساسية ===
-            browser: {
-                userAgent: navigator.userAgent,
-                appName: navigator.appName,
-                appVersion: navigator.appVersion,
-                appCodeName: navigator.appCodeName,
-                vendor: navigator.vendor,
-                product: navigator.product,
-                productSub: navigator.productSub
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            languages: navigator.languages,
+            platform: navigator.platform,
+            hardwareConcurrency: navigator.hardwareConcurrency,
+            deviceMemory: navigator.deviceMemory,
+            maxTouchPoints: navigator.maxTouchPoints,
+            vendor: navigator.vendor,
+            cookieEnabled: navigator.cookieEnabled,
+            doNotTrack: navigator.doNotTrack,
+            onLine: navigator.onLine,
+            screen: {
+                width: window.screen.width,
+                height: window.screen.height,
+                colorDepth: window.screen.colorDepth,
+                pixelDepth: window.screen.pixelDepth,
+                orientation: window.screen.orientation?.type,
+                availWidth: window.screen.availWidth,
+                availHeight: window.screen.availHeight
             },
-            
-            // === معلومات النظام والمنصة ===
-            system: {
-                platform: navigator.platform,
-                oscpu: navigator.oscpu,
-                cpuClass: navigator.cpuClass,
-                hardwareConcurrency: navigator.hardwareConcurrency || 'Unknown',
-                deviceMemory: navigator.deviceMemory || 'Unknown',
-                maxTouchPoints: navigator.maxTouchPoints
+            window: {
+                innerWidth: window.innerWidth,
+                innerHeight: window.innerHeight,
+                outerWidth: window.outerWidth,
+                outerHeight: window.outerHeight
             },
-            
-            // === معلومات اللغة والمنطقة ===
-            localization: {
-                language: navigator.language,
-                languages: navigator.languages,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                timezoneOffset: new Date().getTimezoneOffset(),
-                locale: Intl.DateTimeFormat().resolvedOptions().locale
-            },
-            
-            // === معلومات الشاشة والعرض ===
-            display: {
-                screenWidth: window.screen.width,
-                screenHeight: window.screen.height,
-                screenColorDepth: window.screen.colorDepth,
-                screenPixelDepth: window.screen.pixelDepth,
-                screenOrientation: window.screen.orientation?.type || 'Unknown',
-                availScreenWidth: window.screen.availWidth,
-                availScreenHeight: window.screen.availHeight,
-                devicePixelRatio: window.devicePixelRatio,
-                windowInnerWidth: window.innerWidth,
-                windowInnerHeight: window.innerHeight,
-                windowOuterWidth: window.outerWidth,
-                windowOuterHeight: window.outerHeight
-            },
-            
-            // === معلومات الميزات والقدرات ===
-            features: {
-                cookieEnabled: navigator.cookieEnabled,
-                doNotTrack: navigator.doNotTrack,
-                onLine: navigator.onLine,
-                localStorage: typeof localStorage !== 'undefined',
-                sessionStorage: typeof sessionStorage !== 'undefined',
-                indexedDB: typeof indexedDB !== 'undefined',
-                openDatabase: typeof openDatabase !== 'undefined',
-                serviceWorker: 'serviceWorker' in navigator,
-                webWorker: typeof Worker !== 'undefined',
-                webSocket: 'WebSocket' in window,
-                webRTC: !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia),
-                geolocation: navigator.geolocation ? 'Available' : 'Not Available',
-                mediaDevices: navigator.mediaDevices ? 'Available' : 'Not Available',
-                permissions: navigator.permissions ? 'Available' : 'Not Available',
-                vibration: 'vibrate' in navigator,
-                battery: 'getBattery' in navigator,
-                clipboard: 'clipboard' in navigator,
-                credentials: 'credentials' in navigator
-            },
-            
-            // === معلومات الاتصال والشبكة ===
-            network: getConnectionInfo(),
-            
-            // === معلومات الأجهزة ===
-            hardware: {
-                battery: await getBatteryInfo(),
-                mediaDevices: await getMediaDevicesInfo()
-            },
-            
-            // === معلومات الرسومات والأداء ===
-            graphics: {
-                canvas: await getCanvasFingerprint(),
-                webgl: getWebGLFingerprint(),
-                webglVendor: getWebGLVendor()
-            },
-            
-            // === معلومات الإضافات والملحقات ===
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneOffset: new Date().getTimezoneOffset(),
+            canvas: await getCanvasFingerprint(),
+            webgl: getWebGLFingerprint(),
             plugins: getPluginsInfo(),
-            
-            // === معلومات الأداء ===
-            performance: {
-                memory: performance.memory ? {
-                    jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
-                    totalJSHeapSize: performance.memory.totalJSHeapSize,
-                    usedJSHeapSize: performance.memory.usedJSHeapSize
-                } : 'Not Available',
-                navigation: performance.navigation ? {
-                    type: performance.navigation.type,
-                    redirectCount: performance.navigation.redirectCount
-                } : 'Not Available'
-            }
+            localStorage: typeof localStorage !== 'undefined',
+            sessionStorage: typeof sessionStorage !== 'undefined',
+            indexedDB: typeof indexedDB !== 'undefined',
+            openDatabase: typeof openDatabase !== 'undefined',
+            cpuClass: navigator.cpuClass,
+            oscpu: navigator.oscpu,
+            connection: getConnectionInfo(),
+            battery: await getBatteryInfo(),
+            geolocation: navigator.geolocation ? 'Available' : 'Not Available',
+            mediaDevices: navigator.mediaDevices ? 'Available' : 'Not Available',
+            permissions: navigator.permissions ? 'Available' : 'Not Available'
         };
 
         return fingerprint;
@@ -649,50 +589,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 downlink: connection.downlink,
                 rtt: connection.rtt,
                 saveData: connection.saveData
-            };
-        } catch (e) {
-            return 'Not available';
-        }
-    }
-
-    // Get media devices info
-    async function getMediaDevicesInfo() {
-        try {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-                return 'Not available';
-            }
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const deviceInfo = {
-                audioInput: [],
-                audioOutput: [],
-                videoInput: []
-            };
-            devices.forEach(device => {
-                if (device.kind === 'audioinput') {
-                    deviceInfo.audioInput.push(device.label || 'Unknown');
-                } else if (device.kind === 'audiooutput') {
-                    deviceInfo.audioOutput.push(device.label || 'Unknown');
-                } else if (device.kind === 'videoinput') {
-                    deviceInfo.videoInput.push(device.label || 'Unknown');
-                }
-            });
-            return deviceInfo;
-        } catch (e) {
-            return 'Not available';
-        }
-    }
-
-    // Get WebGL vendor
-    function getWebGLVendor() {
-        try {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            if (!gl) return 'Not available';
-            
-            const ext = gl.getExtension('WEBGL_debug_renderer_info');
-            return {
-                vendor: gl.getParameter(ext.UNMASKED_VENDOR_WEBGL),
-                renderer: gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)
             };
         } catch (e) {
             return 'Not available';
