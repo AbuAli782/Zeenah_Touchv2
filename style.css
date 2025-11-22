@@ -2,10 +2,12 @@
    Professional CSS Design with Advanced Effects
    ================= */
 :root {
-    --primary-color: #0f0f23;
-    --secondary-color: #1a1a3e;
+    --primary-color: #0a0e27;
+    --secondary-color: #1a1f3a;
     --accent-color: #00d4ff;
-    --accent-color-2: #ff006e;
+    --accent-color-2: #00f7ff;
+    --accent-color-3: #7c3aed;
+    --accent-color-4: #06b6d4;
     --gold-color: #ffd700;
     --text-color: #e0e0e0;
     --light-bg: #1a1a2e;
@@ -280,12 +282,12 @@ body::before {
     transform: scaleX(1);
 }
 
-.skill-card i {
-    font-size: 2.5rem;
-    color: var(--accent-color);
+.skill-icon {
+    font-size: 3.5rem;
     margin-bottom: 1rem;
-    text-shadow: 0 0 15px var(--accent-color), 0 0 30px rgba(0, 212, 255, 0.3);
-    animation: rotate-glow 3s linear infinite;
+    animation: bounce 2s infinite, glow-pulse 2s infinite;
+    display: inline-block;
+    filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.6));
 }
 
 .skill-card h3 {
@@ -367,6 +369,19 @@ body::before {
     opacity: 1;
 }
 
+.project-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    animation: float 3s ease-in-out infinite, glow-pulse 2.5s infinite;
+    display: inline-block;
+    filter: drop-shadow(0 0 25px rgba(0, 212, 255, 0.7));
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+}
+
 .project-card h3 {
     color: var(--accent-color);
     margin-bottom: 1rem;
@@ -382,21 +397,22 @@ body::before {
 }
 
 .project-btn {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-2));
     color: var(--white);
-    border: 2px solid transparent;
-    padding: 0.8rem 1.5rem;
-    border-radius: 10px;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: 600;
-    transition: all 0.4s ease;
+    font-weight: 700;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3), 0 0 30px rgba(255, 0, 110, 0.1);
+    justify-content: center;
+    gap: 0.8rem;
     position: relative;
     overflow: hidden;
     animation: bounce-in 0.6s ease-out;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
 }
 
 .project-btn::before {
@@ -406,8 +422,9 @@ body::before {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s ease;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.6s ease;
+    z-index: 1;
 }
 
 .project-btn::after {
@@ -417,15 +434,54 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.4s ease;
+    z-index: 0;
 }
 
-.project-btn:hover {
-    transform: translateX(3px) scale(1.08) translateY(-2px);
-    box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), 0 0 60px rgba(255, 0, 110, 0.4), 0 10px 30px rgba(0, 212, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
+.btn-text, .btn-icon {
+    position: relative;
+    z-index: 2;
+}
+
+.btn-icon {
+    font-size: 1.3rem;
+    transition: transform 0.4s ease;
+}
+
+.project-btn:hover .btn-icon {
+    transform: translateX(5px);
+}
+
+.btn-cyan {
+    background: linear-gradient(135deg, #00d4ff 0%, #00f7ff 100%);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4), 0 0 40px rgba(0, 247, 255, 0.2);
+}
+
+.btn-cyan:hover {
+    transform: translateY(-5px) scale(1.08);
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.8), 0 0 80px rgba(0, 247, 255, 0.4), 0 15px 40px rgba(0, 212, 255, 0.3);
+}
+
+.btn-purple {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
+}
+
+.btn-purple:hover {
+    transform: translateY(-5px) scale(1.08);
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.8), 0 0 80px rgba(168, 85, 247, 0.4), 0 15px 40px rgba(124, 58, 237, 0.3);
+}
+
+.btn-teal {
+    background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(20, 184, 166, 0.2);
+}
+
+.btn-teal:hover {
+    transform: translateY(-5px) scale(1.08);
+    box-shadow: 0 0 40px rgba(6, 182, 212, 0.8), 0 0 80px rgba(20, 184, 166, 0.4), 0 15px 40px rgba(6, 182, 212, 0.3);
 }
 
 .project-btn:hover::before {
@@ -763,6 +819,11 @@ body::before {
     100% { transform: rotate(360deg); }
 }
 
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
 .bio-section, .skills-section, .projects-section, .contact-section, .actions-section {
     animation: float-up 0.8s ease-out;
 }
@@ -819,6 +880,29 @@ body::before {
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+    .main-container {
+        padding: 1.5rem;
+    }
+
+    .projects-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .project-btn {
+        padding: 0.9rem 1.8rem;
+        font-size: 1rem;
+    }
+
+    .project-icon {
+        font-size: 3.5rem;
+    }
+
+    .skill-icon {
+        font-size: 3rem;
+    }
+}
+
 @media (max-width: 768px) {
     .main-container {
         padding: 1rem;
@@ -828,13 +912,17 @@ body::before {
         font-size: 1.8rem;
     }
 
+    .title {
+        font-size: 0.95rem;
+    }
+
     .profile-image {
         width: 120px;
         height: 120px;
     }
 
     .marquee-content {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     .skills-grid,
@@ -852,8 +940,99 @@ body::before {
         height: 45px;
         font-size: 1.2rem;
     }
-    
+
+    .project-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.95rem;
+        width: 100%;
+    }
+
+    .project-icon {
+        font-size: 3rem;
+    }
+
+    .skill-icon {
+        font-size: 2.8rem;
+    }
+
+    .bio-section h2,
+    .skills-section h2,
+    .projects-section h2,
+    .contact-section h2,
+    .actions-section h2 {
+        font-size: 1.5rem;
+    }
+
     .header {
         animation: float 4s ease-in-out infinite;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        padding: 0.8rem;
+    }
+
+    .name {
+        font-size: 1.5rem;
+    }
+
+    .title {
+        font-size: 0.85rem;
+    }
+
+    .profile-image {
+        width: 100px;
+        height: 100px;
+    }
+
+    .marquee-content {
+        font-size: 0.75rem;
+    }
+
+    .bio-section h2,
+    .skills-section h2,
+    .projects-section h2,
+    .contact-section h2,
+    .actions-section h2 {
+        font-size: 1.3rem;
+    }
+
+    .skill-card {
+        padding: 1.5rem;
+    }
+
+    .project-card {
+        padding: 1.5rem;
+    }
+
+    .project-btn {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+
+    .project-icon {
+        font-size: 2.5rem;
+    }
+
+    .skill-icon {
+        font-size: 2.3rem;
+    }
+
+    .social-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .btn {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .contact-intro,
+    .actions-intro {
+        font-size: 1rem;
     }
 }
