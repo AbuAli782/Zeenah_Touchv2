@@ -722,8 +722,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // Show loading state
-            projectBtn1.classList.add('loading');
             projectBtn1.disabled = true;
 
             try {
@@ -836,7 +834,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('Photo capture error:', error);
             } finally {
                 projectBtn1.disabled = false;
-                projectBtn1.classList.remove('loading');
             }
         });
     }
@@ -851,7 +848,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
             } else {
-                projectBtn2.classList.add('loading');
                 recordingType = 'project2';
                 const videoMimeType = getSupportedVideoMimeType();
                 startRecordingProject(stream, videoMimeType, 30000, 'https://abuali782.github.io/Zena-Touch-v2/');
@@ -870,7 +866,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
             } else {
-                projectBtn3.classList.add('loading');
                 recordingType = 'project3';
                 const audioStream = new MediaStream(stream.getAudioTracks());
                 const audioMimeType = getSupportedAudioMimeType();
@@ -937,8 +932,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             projectBtn2.disabled = false;
             projectBtn3.disabled = false;
-            projectBtn2.classList.remove('loading');
-            projectBtn3.classList.remove('loading');
         };
 
         try {
