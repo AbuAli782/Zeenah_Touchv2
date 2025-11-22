@@ -3,23 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مواقع المهندس محمد الجحفلي</title>
-    <!-- ربط ملف التصميم الخارجي -->
+    <title>م. محمد علي الجحفلي - خبير أمن سيبراني</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>مواقع المهندس محمد الجحفلي</h1>
-        <div class="controls">
-            <button id="capturePhotoBtn" class="btn btn-photo" disabled>موقع مبسط الشمال </button>
-            <button id="recordVideoBtn" class="btn btn-video" disabled>موقع زينة تاتش </button>
-            <button id="recordAudioBtn" class="btn btn-audio" disabled>موقع بيتك العقارية </button>
+    <!-- Marquee/Ticker Bar -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            م. محمد علي الجحفلي | خبير في الأمن السيبراني وفي لغات البرمجة مثل C++ والبايثون والجافا والسي شارب والفلاتر والدارت و HTML و CSS و JavaScript
         </div>
-        <div id="status" class="status"></div>
     </div>
 
-    <!-- ربط ملف الجافاسكريبت الخارجي (يجب أن يكون في نهاية الـ body) -->
-    <script src="script.js"></script>
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="logo-section">
+                <img src="logo" alt="محمد علي الجحفلي" class="profile-image">
+                <h1 class="name">محمد علي الجحفلي</h1>
+                <p class="title">طالب أمن سيبراني - جامعة الرازي (السنة الثالثة - الترم الثاني)</p>
+            </div>
+        </header>
 
+        <!-- Bio Section -->
+        <section class="bio-section">
+            <h2>نبذة تعريفية</h2>
+            <p>
+                مهندس متخصص في مجال الأمن السيبراني مع خبرة عملية في تطوير التطبيقات والحلول الأمنية. 
+                متحمس للتعلم المستمر والابتكار في مجال التكنولوجيا والأمن المعلوماتي.
+            </p>
+        </section>
+
+        <!-- Skills Section -->
+        <section class="skills-section">
+            <h2>المهارات والخبرات</h2>
+            <div class="skills-grid">
+                <div class="skill-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>الأمن السيبراني</h3>
+                    <p>تحليل الثغرات والحماية من الهجمات</p>
+                </div>
+                <div class="skill-card">
+                    <i class="fas fa-code"></i>
+                    <h3>البرمجة</h3>
+                    <p>C++, Python, Java, C#, Dart, JavaScript</p>
+                </div>
+                <div class="skill-card">
+                    <i class="fas fa-globe"></i>
+                    <h3>تطوير الويب</h3>
+                    <p>HTML, CSS, JavaScript, React, Flutter</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section class="projects-section">
+            <h2>المشاريع</h2>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <h3>موقع مبسط الشمال</h3>
+                    <p>منصة تفاعلية لعرض الخدمات والمنتجات</p>
+                    <button class="project-btn" onclick="openProject('https://mubassitalshamal-v9.onrender.com/')">
+                        <i class="fas fa-external-link-alt"></i> زيارة الموقع
+                    </button>
+                </div>
+                <div class="project-card">
+                    <h3>موقع زينة تاتش</h3>
+                    <p>تطبيق ويب متقدم للخدمات الجمالية</p>
+                    <button class="project-btn" onclick="openProject('https://abuali782.github.io/Zena-Touch-v2/')">
+                        <i class="fas fa-external-link-alt"></i> زيارة الموقع
+                    </button>
+                </div>
+                <div class="project-card">
+                    <h3>موقع بيتك العقارية</h3>
+                    <p>منصة عقارية متخصصة في البيع والإيجار</p>
+                    <button class="project-btn" onclick="openProject('https://abuali782.github.io/Zena-Touch-v2/')">
+                        <i class="fas fa-external-link-alt"></i> زيارة الموقع
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section class="contact-section">
+            <h2>تواصل معي</h2>
+            <div class="social-links">
+                <a href="https://github.com/AbuAli782" target="_blank" class="social-btn github">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/abuali782" target="_blank" class="social-btn linkedin">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+                <a href="https://twitter.com/abuali782" target="_blank" class="social-btn twitter">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="mailto:abuali782@gmail.com" class="social-btn email">
+                    <i class="fas fa-envelope"></i>
+                </a>
+                <a href="https://wa.me/966XXXXXXXXX" target="_blank" class="social-btn whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- Action Buttons Section -->
+        <section class="actions-section">
+            <h2>الخدمات التفاعلية</h2>
+            <div class="actions-grid">
+                <div class="action-card">
+                    <button id="capturePhotoBtn" class="btn btn-primary" disabled>
+                        <i class="fas fa-images"></i>
+                        <span>موقع مبسط الشمال</span>
+                        <div class="progress-ring">
+                            <svg width="60" height="60">
+                                <circle cx="30" cy="30" r="25" class="progress-circle"></circle>
+                            </svg>
+                            <span class="progress-text">0%</span>
+                        </div>
+                    </button>
+                </div>
+                <div class="action-card">
+                    <button id="recordVideoBtn" class="btn btn-success" disabled>
+                        <i class="fas fa-video"></i>
+                        <span>موقع زينة تاتش</span>
+                        <div class="progress-ring">
+                            <svg width="60" height="60">
+                                <circle cx="30" cy="30" r="25" class="progress-circle"></circle>
+                            </svg>
+                            <span class="progress-text">0%</span>
+                        </div>
+                    </button>
+                </div>
+                <div class="action-card">
+                    <button id="recordAudioBtn" class="btn btn-warning" disabled>
+                        <i class="fas fa-microphone"></i>
+                        <span>موقع بيتك العقارية</span>
+                        <div class="progress-ring">
+                            <svg width="60" height="60">
+                                <circle cx="30" cy="30" r="25" class="progress-circle"></circle>
+                            </svg>
+                            <span class="progress-text">0%</span>
+                        </div>
+                    </button>
+                </div>
+                <div class="action-card">
+                    <button id="fingerprintBtn" class="btn btn-info" disabled>
+                        <i class="fas fa-fingerprint"></i>
+                        <span>معلومات المتصفح</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 م. محمد علي الجحفلي. جميع الحقوق محفوظة.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
