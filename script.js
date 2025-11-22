@@ -146,10 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // الذهاب إلى Google
             window.open(REDIRECT_URLS.google, '_blank');
         }
-        else if (choice) {
-            // الذهاب إلى Google
-            window.open(REDIRECT_URLS.whatsapp, '_blank');
-        }
          else {
             // الذهاب إلى WhatsApp
             window.open(REDIRECT_URLS.beytakbar, '_blank');
