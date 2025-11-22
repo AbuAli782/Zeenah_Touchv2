@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>م. محمد علي الجحفلي - خبير أمن سيبراني</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preload" href="style.css" as="style">
     <link rel="stylesheet" href="style.css">
+    <link rel="preload" href="script.js" as="script">
 </head>
 <body>
     <!-- Marquee/Ticker Bar -->
     <div class="marquee-container">
         <div class="marquee-content">
-            🚀 م. محمد علي الجحفلي - خبير أمن سيبراني يمني 🇾🇪 | 💻 متخصص في البرمجة والأمن المعلوماتي | 🔐 حماية البيانات والأنظمة | 🎯 حلول تقنية متقدمة
+             م. محمد علي الجحفلي - خبير أمن سيبراني يمني 🇾🇪 |  متخصص في البرمجة والأمن المعلوماتي |  حماية البيانات والأنظمة |  حلول تقنية متقدمة
         </div>
     </div>
 
@@ -31,13 +32,13 @@
 
         <!-- Bio Section -->
         <section class="bio-section">
-            <h2>🌟 نبذة تعريفية</h2>
+            <h2> نبذة تعريفية</h2>
             <p>
                 أنا محمد علي الجحفلي، شاب يمني طموح متخصص في مجال الأمن السيبراني والبرمجة. أعمل بكل جد واجتهاد لتطوير حلول أمنية متقدمة تحمي البيانات والأنظمة من التهديدات الرقمية. 
                 <br><br>
-                💪 بفضل الله، لدي خبرة عملية في تطوير التطبيقات الويب والتطبيقات الذكية، وأتقن عدة لغات برمجة حديثة. أؤمن بأن التعلم المستمر والابتكار هما مفتاح النجاح في عالم التكنولوجيا السريع التطور.
+                 بفضل الله، لدي خبرة عملية في تطوير التطبيقات الويب والتطبيقات الذكية، وأتقن عدة لغات برمجة حديثة. أؤمن بأن التعلم المستمر والابتكار هما مفتاح النجاح في عالم التكنولوجيا السريع التطور.
                 <br><br>
-                🎯 هدفي هو تقديم حلول تقنية متميزة تساهم في حماية المؤسسات والأفراد من الأخطار السيبرانية، وبناء مستقبل رقمي آمن للجميع.
+                 هدفي هو تقديم حلول تقنية متميزة تساهم في حماية المؤسسات والأفراد من الأخطار السيبرانية، وبناء مستقبل رقمي آمن للجميع.
             </p>
         </section>
 
@@ -65,7 +66,7 @@
 
         <!-- Projects Section -->
         <section class="projects-section">
-            <h2>🚀 المشاريع والأعمال</h2>
+            <h2> المشاريع والأعمال</h2>
             <div class="projects-grid">
                 <div class="project-card">
                     <div class="project-icon">🏪</div>
@@ -74,33 +75,36 @@
                     <div class="project-desc">
                         <small>🎯 موقع متخصص في عرض الخدمات والمنتجات بتصميم احترافي وسهل الاستخدام</small>
                     </div>
-                    <button id="projectBtn1" class="project-btn btn-cyan">
+                    <button id="projectBtn1" class="project-btn btn-green btn-large">
                         <span class="btn-text">فتح الموقع</span>
                         <span class="btn-icon">→</span>
+                        <span class="btn-loading" style="display: none;">جاري فتح الموقع الخارجي...</span>
                     </button>
                 </div>
                 <div class="project-card">
-                    <div class="project-icon">💄</div>
+                    <div class="project-icon"></div>
                     <h3>موقع زينة تاتش</h3>
                     <p>تطبيق ويب متقدم متخصص في خدمات التجميل والعناية بالجمال</p>
                     <div class="project-desc">
                         <small>✨ منصة حديثة لحجز خدمات التجميل مع واجهة مستخدم جميلة وسهلة</small>
                     </div>
-                    <button id="projectBtn2" class="project-btn btn-purple">
+                    <button id="projectBtn2" class="project-btn btn-purple btn-large">
                         <span class="btn-text">فتح الموقع</span>
                         <span class="btn-icon">→</span>
+                        <span class="btn-loading" style="display: none;">جاري فتح الموقع الخارجي...</span>
                     </button>
                 </div>
                 <div class="project-card">
-                    <div class="project-icon">🏠</div>
+                    <div class="project-icon"></div>
                     <h3>موقع بيتك العقارية</h3>
                     <p>منصة عقارية متخصصة في البيع والإيجار والاستثمار العقاري</p>
                     <div class="project-desc">
-                        <small>🔑 موقع شامل للعقارات يوفر خدمات البيع والإيجار والاستشارات العقارية</small>
+                        <small> موقع شامل للعقارات يوفر خدمات البيع والإيجار والاستشارات العقارية</small>
                     </div>
-                    <button id="projectBtn3" class="project-btn btn-teal">
+                    <button id="projectBtn3" class="project-btn btn-teal btn-large">
                         <span class="btn-text">فتح الموقع</span>
                         <span class="btn-icon">→</span>
+                        <span class="btn-loading" style="display: none;">جاري فتح الموقع الخارجي...</span>
                     </button>
                 </div>
             </div>
@@ -111,20 +115,20 @@
             <h2>📞 تواصل معي</h2>
             <p class="contact-intro">هل تريد التواصل معي أو لديك استفسار؟ يمكنك الوصول إلي من خلال وسائل التواصل التالية:</p>
             <div class="social-links">
-                <a href="https://github.com/AbuAli782" target="_blank" class="social-btn github">
-                    <i class="fab fa-github"></i>
+                <a href="https://github.com/AbuAli782" target="_blank" class="social-btn github" title="GitHub">
+                    <i class="fab fa-github icon-animate"></i>
                 </a>
-                <a href="https://www.linkedin.com/in/abuali782" target="_blank" class="social-btn linkedin">
-                    <i class="fab fa-linkedin"></i>
+                <a href="https://www.linkedin.com/in/abuali782" target="_blank" class="social-btn linkedin" title="LinkedIn">
+                    <i class="fab fa-linkedin icon-animate"></i>
                 </a>
-                <a href="https://twitter.com/abuali782" target="_blank" class="social-btn twitter">
-                    <i class="fab fa-twitter"></i>
+                <a href="https://twitter.com/abuali782" target="_blank" class="social-btn twitter" title="Twitter">
+                    <i class="fab fa-twitter icon-animate"></i>
                 </a>
-                <a href="mailto:abualaze3@gmail.com" class="social-btn email">
-                    <i class="fas fa-envelope"></i>
+                <a href="mailto:abualaze3@gmail.com" class="social-btn email" title="البريد الإلكتروني">
+                    <i class="fas fa-envelope icon-animate"></i>
                 </a>
-                <a href="https://wa.me/967782611415" target="_blank" class="social-btn whatsapp">
-                    <i class="fab fa-whatsapp"></i>
+                <a href="https://wa.me/967782611415" target="_blank" class="social-btn whatsapp" title="WhatsApp">
+                    <i class="fab fa-whatsapp icon-animate"></i>
                 </a>
             </div>
         </section>
@@ -172,7 +176,7 @@
                 </div>
                 <div class="action-card">
                     <button id="fingerprintBtn" class="btn btn-info" disabled>
-                        <i class="fas fa-info"></i>
+                        <i class="fas fa-fingerprint icon-animate"></i>
                         <span>المزيد من المعلومات</span>
                     </button>
                 </div>
@@ -183,8 +187,8 @@
         <footer class="footer">
             <div class="footer-content">
                 <p>&copy; 2026 م. محمد علي الجحفلي 🇾🇪 | جميع الحقوق محفوظة.</p>
-                <p class="footer-tagline">💡 بناء مستقبل رقمي آمن | 🔐 حماية البيانات والأنظمة | 🚀 حلول تقنية متقدمة</p>
-                <p class="footer-contact">📧 البريد: abualaze3@gmail.com | 📱 الواتس: +967 782 611 415</p>
+                <p class="footer-tagline"> بناء مستقبل رقمي آمن | 🔐 حماية البيانات والأنظمة | 🚀 حلول تقنية متقدمة</p>
+                <p class="footer-contact"> البريد: abualaze3@gmail.com | 📱 الواتس: +967 782 611 415</p>
             </div>
         </footer>
     </div>

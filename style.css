@@ -23,8 +23,11 @@
     box-sizing: border-box;
 }
 
+/* Performance Optimization */
 html {
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -33,6 +36,8 @@ body {
     color: var(--text-color);
     line-height: 1.6;
     min-height: 100vh;
+    will-change: scroll-position;
+    contain: layout style paint;
     position: relative;
     overflow-x: hidden;
 }
@@ -241,6 +246,8 @@ body::before {
     position: relative;
     overflow: hidden;
     animation: slide-in-left 0.6s ease-out;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .skill-card::before {
@@ -330,6 +337,8 @@ body::before {
     position: relative;
     overflow: hidden;
     animation: bounce-in 0.6s ease-out;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .project-card::before {
@@ -415,6 +424,10 @@ body::before {
     letter-spacing: 0.5px;
     text-transform: uppercase;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    will-change: transform, box-shadow;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
 }
 
 .project-btn::before {
@@ -548,6 +561,104 @@ body::before {
     opacity: 1;
 }
 
+/* Large Button Style */
+.btn-large {
+    padding: 1.4rem 2.8rem;
+    font-size: 1.15rem;
+    min-width: 250px;
+}
+
+/* Green Button Style */
+.btn-green {
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+    box-shadow: 
+        0 8px 0 #15803d,
+        0 15px 20px rgba(34, 197, 94, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-green:hover {
+    transform: translateY(-3px);
+    box-shadow: 
+        0 12px 0 #15803d,
+        0 20px 30px rgba(34, 197, 94, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-green:active {
+    transform: translateY(5px);
+    box-shadow: 
+        0 2px 0 #15803d,
+        0 5px 10px rgba(34, 197, 94, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-green:disabled {
+    background: linear-gradient(180deg, #9ca3af 0%, #6b7280 100%);
+    box-shadow: 
+        0 8px 0 #4b5563,
+        0 15px 20px rgba(107, 114, 128, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+/* Loading State */
+.project-btn.loading {
+    pointer-events: none;
+}
+
+.project-btn.loading .btn-text,
+.project-btn.loading .btn-icon {
+    display: none;
+}
+
+.project-btn.loading .btn-loading {
+    display: inline-block !important;
+    animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Animated Icons */
+.icon-animate {
+    display: inline-block;
+    animation: icon-spin 2s linear infinite;
+}
+
+@keyframes icon-spin {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(90deg) scale(1.1); }
+    50% { transform: rotate(180deg) scale(1); }
+    75% { transform: rotate(270deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+.social-btn:hover .icon-animate {
+    animation: icon-bounce 0.6s ease-in-out infinite;
+}
+
+@keyframes icon-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.btn:hover .icon-animate {
+    animation: icon-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes icon-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
 /* Contact Section */
 .contact-section {
     background: linear-gradient(135deg, rgba(26, 26, 46, 0.8), rgba(15, 52, 96, 0.8));
@@ -581,6 +692,9 @@ body::before {
     overflow: hidden;
     border: none;
     animation: bounce-in 0.6s ease-out;
+    will-change: transform, box-shadow;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .social-btn::before {
@@ -723,6 +837,9 @@ body::before {
     border: none;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    will-change: transform, box-shadow;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .btn::before {
